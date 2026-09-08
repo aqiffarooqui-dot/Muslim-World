@@ -14,7 +14,7 @@ export default function App() {
       <div className="w-full h-full sm:max-w-md sm:h-[92vh] sm:rounded-[40px] sm:border-[8px] sm:border-slate-800 bg-slate-900 flex flex-col relative overflow-hidden shadow-2xl">
         
         {/* iOS Style Top Header */}
-        <header className="ios-glass sticky top-0 border-b border-slate-800/60 px-4 py-3.5 flex justify-between items-center z-30 shadow-sm shrink-0">
+        <header className="ios-glass sticky top-0 border-b border-slate-800/60 px-4 py-3.5 flex justify-between items-center z-30 shadow-sm shrink-0 bg-slate-900/80 backdrop-blur-md">
           <div className="flex items-center gap-2.5">
             {(currentTool || selectedSurah) && (
               <button 
@@ -68,7 +68,7 @@ export default function App() {
 
         {/* iOS Frosted Glass Bottom Navigation Bar */}
         {!currentTool && !selectedSurah && (
-          <nav className="absolute bottom-0 left-0 right-0 ios-glass border-t border-slate-800/80 flex justify-around items-center h-20 pb-4 px-2 z-30 shadow-lg shrink-0">
+          <nav className="absolute bottom-0 left-0 right-0 ios-glass border-t border-slate-800/80 flex justify-around items-center h-20 pb-4 px-2 z-30 shadow-lg shrink-0 bg-slate-950/80 backdrop-blur-md">
             <NavItem icon={<Home size={22} />} label="Home" isActive={activeTab === 'home'} onClick={() => setActiveTab('home')} />
             <NavItem icon={<BookOpen size={22} />} label="Quran" isActive={activeTab === 'quran'} onClick={() => setActiveTab('quran')} />
             <NavItem icon={<Heart size={22} />} label="Dua" isActive={activeTab === 'dua'} onClick={() => setActiveTab('dua')} />
@@ -98,11 +98,10 @@ function NavItem({ icon, label, isActive, onClick }) {
   );
 }
 
-// 1. Home Screen
 function HomeScreen({ setActiveTab, setCurrentTool }) {
   return (
     <div className="p-4 space-y-4">
-      <div className="bg-gradient-to-br from-emerald-600 to-teal-800 rounded-3xl p-5 text-white shadow-xl shadow-emerald-950/30 relative overflow-hidden border border-emerald-500/20">
+      <div className="bg-gradient-to-br from-emerald-600 to-teal-800 rounded-3xl p-5 text-white shadow-xl shadow-emerald-950/35 relative overflow-hidden border border-emerald-500/20">
         <div className="absolute -right-8 -bottom-8 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
         <div className="relative z-10">
           <div className="flex justify-between items-center mb-3">
@@ -160,7 +159,6 @@ function QuickFeatureItem({ icon, label }) {
   );
 }
 
-// 2. Quran Screen
 function QuranScreen({ setSelectedSurah }) {
   return (
     <div className="p-4 space-y-3">
@@ -200,7 +198,6 @@ function QuranScreen({ setSelectedSurah }) {
   );
 }
 
-// 3. Surah Detail View
 function SurahDetail({ surah }) {
   const [translationLang, setTranslationLang] = useState('hinglish');
 
@@ -261,7 +258,6 @@ function SurahDetail({ surah }) {
   );
 }
 
-// 4. Dua Screen
 function DuaScreen() {
   return (
     <div className="p-4 space-y-3">
@@ -288,7 +284,6 @@ function DuaCategoryCard({ title, count }) {
   );
 }
 
-// 5. Qibla Screen
 function QiblaScreen() {
   return (
     <div className="p-4 flex flex-col items-center justify-center h-[70vh] text-center space-y-5">
@@ -307,7 +302,6 @@ function QiblaScreen() {
   );
 }
 
-// 6. More Screen
 function MoreScreen({ setCurrentTool }) {
   return (
     <div className="p-4 space-y-2.5">
@@ -330,7 +324,6 @@ function MoreItem({ title, onClick }) {
   );
 }
 
-// 7. Tasbih Counter View
 function TasbihView() {
   const [count, setCount] = useState(0);
   const [selectedZikr, setSelectedZikr] = useState("SubhanAllah");
@@ -383,7 +376,6 @@ function TasbihView() {
   );
 }
 
-// 8. 99 Names View
 function NamesListView() {
   return (
     <div className="p-4 space-y-2.5">
