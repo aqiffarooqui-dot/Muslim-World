@@ -10,12 +10,11 @@ export default function App() {
 
   return (
     <div className="fixed inset-0 bg-[#090d16] flex justify-center items-center overflow-hidden font-sans selection:bg-emerald-500 selection:text-white">
-      {/* Authentic Mobile Device Frame Container */}
       <div className="w-full h-full sm:max-w-[410px] sm:h-[88vh] sm:rounded-[48px] sm:border-[10px] sm:border-slate-800 bg-[#0f172a] flex flex-col relative overflow-hidden shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)]">
         
         {/* Top Status Bar */}
         <div className="bg-[#0f172a]/90 backdrop-blur-md pt-3 pb-1 px-6 flex justify-between items-center text-xs font-semibold text-slate-400 shrink-0">
-          <span>02:18</span>
+          <span>02:19</span>
           <div className="w-20 h-4 bg-black rounded-full mx-auto absolute left-1/2 -translate-x-1/2 top-2"></div>
           <div className="flex items-center gap-1.5">
             <span className="text-[10px]">5G</span>
@@ -47,20 +46,10 @@ export default function App() {
               )}
             </div>
           </div>
-          {!currentTool && !selectedSurah && (
-            <div className="flex items-center gap-1.5">
-              <button className="w-9 h-9 bg-slate-800/60 text-slate-300 hover:bg-slate-800 flex items-center justify-center rounded-full transition">
-                <Search size={17} />
-              </button>
-              <button className="w-9 h-9 bg-slate-800/60 text-slate-300 hover:bg-slate-800 flex items-center justify-center rounded-full transition">
-                <Bell size={17} />
-              </button>
-            </div>
-          )}
         </header>
 
         {/* Scrollable Body Content */}
-        <main className="flex-1 overflow-y-auto pb-28 pt-2 px-4 space-y-4 scrollbar-none">
+        <main className="flex-1 overflow-y-auto pb-28 pt-2 px-4 space-y-4">
           {selectedSurah ? (
             <SurahDetail surah={selectedSurah} />
           ) : currentTool === 'tasbih' ? (
@@ -78,9 +67,9 @@ export default function App() {
           )}
         </main>
 
-        {/* Floating iOS Bottom Navigation Bar */}
+        {/* Bottom Navigation */}
         {!currentTool && !selectedSurah && (
-          <nav className="absolute bottom-0 left-0 right-0 bg-[#0f172a]/95 backdrop-blur-2xl border-t border-slate-800/80 flex justify-around items-center h-20 pb-4 px-3 z-30 shadow-[0_-10px_25px_rgba(0,0,0,0.5)] shrink-0">
+          <nav className="absolute bottom-0 left-0 right-0 bg-[#0f172a]/95 backdrop-blur-2xl border-t border-slate-800/80 flex justify-around items-center h-20 pb-4 px-3 z-30 shadow-2xl shrink-0">
             <NavItem icon={<Home size={21} />} label="Home" isActive={activeTab === 'home'} onClick={() => setActiveTab('home')} />
             <NavItem icon={<BookOpen size={21} />} label="Quran" isActive={activeTab === 'quran'} onClick={() => setActiveTab('quran')} />
             <NavItem icon={<Heart size={21} />} label="Dua" isActive={activeTab === 'dua'} onClick={() => setActiveTab('dua')} />
@@ -102,7 +91,7 @@ function NavItem({ icon, label, isActive, onClick }) {
         isActive ? 'text-emerald-400 scale-105 font-bold' : 'text-slate-400 hover:text-slate-200'
       }`}
     >
-      <div className={`p-1.5 rounded-xl transition-all ${isActive ? 'bg-emerald-500/15 shadow-sm shadow-emerald-500/20' : 'bg-transparent'}`}>
+      <div className={`p-1.5 rounded-xl transition-all ${isActive ? 'bg-emerald-500/15 shadow-sm' : 'bg-transparent'}`}>
         {icon}
       </div>
       <span className="text-[10px] mt-1 tracking-tight">{label}</span>
@@ -110,180 +99,61 @@ function NavItem({ icon, label, isActive, onClick }) {
   );
 }
 
-// 1. Home Screen with Live Countdown & Hijri Calendar
 function HomeScreen({ setActiveTab, setCurrentTool }) {
   const [locationName, setLocationName] = useState("New Delhi, India");
-  const [loadingLoc, setLoadingLoc] = useState(false);
   const [timeString, setTimeString] = useState('');
-  const [hijriDate, setHijriDate] = useState('Loading Hijri...');
-  const [nextPrayerInfo, setNextPrayerInfo] = useState({ name: 'Fajr', countdown: '00h 00m left' });
-
-  // Prayer schedule (Hours & Minutes in 24h format for exact countdown calculation)
-  const prayers = [
-    { name: 'Fajr', h: 4, m: 32 },
-    { name: 'Dhuhr', h: 12, m: 34 },
-    { name: 'Asr', h: 16, m: 50 },
-    { name: 'Maghrib', h: 18, m: 48 },
-    { name: 'Isha', h: 20, m: 8 },
-  ];
 
   useEffect(() => {
-    // Fetch Hijri Date using Aladhan API
-    async function fetchHijri() {
-      try {
-        const today = new Date();
-        const dd = String(today.getDate()).padStart(2, '0');
-        const mm = String(today.getMonth() + 1).padStart(2, '0');
-        const yyyy = today.getFullYear();
-        const res = await fetch(`https://api.aladhan.com/v1/gToH?date=${dd}-${mm}-${yyyy}`);
-        const data = await res.json();
-        if (data.code === 200) {
-          const h = data.data.hijri;
-          setHijriDate(`${h.day} ${h.month.en} ${h.year} AH`);
-        }
-      } catch (e) {
-        setHijriDate("27 Safar 1448 AH");
-      }
-    }
-    fetchHijri();
-
-    const updateTimer = () => {
+    const updateTime = () => {
       const now = new Date();
-      const curH = now.getHours();
-      const curM = now.getMinutes();
-      const curS = now.getSeconds();
-      const totalCurSec = curH * 3600 + curM * 60 + curS;
-
       setTimeString(now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }));
-
-      // Find next prayer
-      let targetPrayer = prayers[0];
-      let found = false;
-
-      for (let p of prayers) {
-        const targetSec = p.h * 3600 + p.m * 60;
-        if (targetSec > totalCurSec) {
-          targetPrayer = p;
-          found = true;
-          break;
-        }
-      }
-
-      // If all prayers passed today, next is Fajr tomorrow
-      let diffSec = 0;
-      if (!found) {
-        const tomorrowFajrSec = (24 * 3600) + (prayers[0].h * 3600 + prayers[0].m * 60);
-        diffSec = tomorrowFajrSec - totalCurSec;
-      } else {
-        const targetSec = targetPrayer.h * 3600 + targetPrayer.m * 60;
-        diffSec = targetSec - totalCurSec;
-      }
-
-      const hrs = Math.floor(diffSec / 3600);
-      const mins = Math.floor((diffSec % 3600) / 60);
-      const secs = diffSec % 60;
-
-      setNextPrayerInfo({
-        name: targetPrayer.name,
-        countdown: `${hrs}h ${mins}m ${secs}s left`
-      });
     };
-
-    updateTimer();
-    const timer = setInterval(updateTimer, 1000);
+    updateTime();
+    const timer = setInterval(updateTime, 1000);
     return () => clearInterval(timer);
   }, []);
-
-  const fetchUserLocation = () => {
-    if (!navigator.geolocation) return;
-    setLoadingLoc(true);
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const { latitude, longitude } = position.coords;
-        try {
-          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
-          const data = await res.json();
-          const city = data.address.city || data.address.town || data.address.state || "Current Location";
-          const country = data.address.country || "";
-          setLocationName(`${city}, ${country}`);
-        } catch (err) {
-          setLocationName(`Lat: ${latitude.toFixed(2)}, Lon: ${longitude.toFixed(2)}`);
-        } finally {
-          setLoadingLoc(false);
-        }
-      },
-      () => setLoadingLoc(false),
-      { timeout: 10000 }
-    );
-  };
 
   return (
     <div className="space-y-4 pb-4">
       <div className="flex justify-between items-center px-1">
         <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-400">
           <MapPin size={13} />
-          <span>{loadingLoc ? "Detecting location..." : locationName}</span>
-        </div>
-        <button 
-          onClick={fetchUserLocation}
-          className="bg-slate-800 hover:bg-slate-700 text-slate-300 px-2.5 py-1 rounded-xl text-[10px] font-bold flex items-center gap-1 transition border border-slate-700/60 active:scale-95"
-        >
-          <Navigation size={11} className="text-emerald-400" /> Detect GPS
-        </button>
-      </div>
-
-      {/* Enhanced Prayer Card with Hijri Month & Live Countdown */}
-      <div className="bg-gradient-to-br from-emerald-600 via-teal-700 to-emerald-900 rounded-3xl p-5 text-white shadow-xl shadow-emerald-950/40 relative overflow-hidden border border-emerald-400/20">
-        <div className="absolute -right-6 -bottom-6 w-36 h-36 bg-white/10 rounded-full blur-3xl pointer-events-none"></div>
-        <div className="relative z-10">
-          <div className="flex justify-between items-center mb-3">
-            <div className="flex items-center gap-1.5 bg-emerald-950/50 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-emerald-400/20 text-[11px] font-bold text-emerald-200 shadow-inner">
-              <Calendar size={13} className="text-emerald-400" />
-              <span>{hijriDate}</span>
-            </div>
-            <span className="text-[10px] bg-white/10 px-2.5 py-1 rounded-full text-emerald-100 font-medium">Next: {nextPrayerInfo.name}</span>
-          </div>
-          
-          <div className="text-center my-4 bg-black/10 backdrop-blur-sm py-4 rounded-2xl border border-white/10">
-            <div className="flex items-center justify-center gap-1 text-xs text-emerald-200 font-medium tracking-wider uppercase mb-1">
-              <Clock size={13} /> Time Remaining
-            </div>
-            <p className="text-3xl font-extrabold tracking-tight text-white">{nextPrayerInfo.countdown}</p>
-            <p className="text-[11px] text-emerald-200 mt-1 font-semibold">Local Time: {timeString}</p>
-          </div>
-
-          <div className="grid grid-cols-5 gap-1.5 pt-1 text-center text-xs">
-            {prayers.map((p, idx) => {
-              const isNext = nextPrayerInfo.name.includes(p.name);
-              return (
-                <div key={idx} className={`py-2 rounded-xl transition ${isNext ? 'bg-emerald-950/90 border border-emerald-400/50 shadow-inner' : 'bg-black/15 border border-white/5'}`}>
-                  <p className={`${isNext ? 'text-emerald-300 font-bold' : 'text-emerald-200'} text-[10px]`}>{p.name}</p>
-                  <p className={`font-bold text-[11px] mt-0.5 ${isNext ? 'text-white' : 'text-emerald-100'}`}>{p.time.replace(/ [AP]M/, '')}</p>
-                </div>
-              );
-            })}
-          </div>
+          <span>{locationName}</span>
         </div>
       </div>
 
-      <div className="bg-slate-800/90 border border-slate-700/80 rounded-3xl p-5 shadow-lg backdrop-blur-xl relative overflow-hidden">
+      <div className="bg-gradient-to-br from-emerald-600 via-teal-700 to-emerald-900 rounded-3xl p-5 text-white shadow-xl">
         <div className="flex justify-between items-center mb-3">
-          <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
-            <Sparkles size={14} /> Ayah of the Day
-          </span>
-          <button className="w-8 h-8 bg-slate-700/60 hover:bg-slate-700 flex items-center justify-center rounded-full transition text-slate-300">
-            <Volume2 size={16} />
-          </button>
+          <div className="flex items-center gap-1.5 bg-emerald-950/50 px-3.5 py-1.5 rounded-full text-[11px] font-bold text-emerald-200">
+            <Calendar size={13} className="text-emerald-400" />
+            <span>27 Safar 1448 AH</span>
+          </div>
+          <span className="text-[10px] bg-white/10 px-2.5 py-1 rounded-full text-emerald-100 font-medium">Next: Fajr</span>
         </div>
+        
+        <div className="text-center my-4 bg-black/10 py-4 rounded-2xl border border-white/10">
+          <p className="text-xs text-emerald-200 font-medium tracking-wider uppercase mb-1">Local Time</p>
+          <p className="text-3xl font-extrabold tracking-tight text-white">{timeString || "02:19:00 AM"}</p>
+        </div>
+
+        <div className="grid grid-cols-5 gap-1.5 text-center text-xs">
+          <div className="bg-emerald-950/90 py-2 rounded-xl border border-emerald-400/50"><p className="text-emerald-300 font-bold text-[10px]">Fajr</p><p className="font-bold text-[11px] text-white">04:32</p></div>
+          <div className="bg-black/15 py-2 rounded-xl"><p className="text-emerald-200 text-[10px]">Dhuhr</p><p className="font-bold text-[11px]">12:34</p></div>
+          <div className="bg-black/15 py-2 rounded-xl"><p className="text-emerald-200 text-[10px]">Asr</p><p className="font-bold text-[11px]">04:50</p></div>
+          <div className="bg-black/15 py-2 rounded-xl"><p className="text-emerald-200 text-[10px]">Maghrib</p><p className="font-bold text-[11px]">06:48</p></div>
+          <div className="bg-black/15 py-2 rounded-xl"><p className="text-emerald-200 text-[10px]">Isha</p><p className="font-bold text-[11px]">08:08</p></div>
+        </div>
+      </div>
+
+      <div className="bg-slate-800/90 border border-slate-700/80 rounded-3xl p-5 shadow-lg">
+        <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5 mb-3">
+          <Sparkles size={14} /> Ayah of the Day
+        </span>
         <p className="text-right text-2xl font-arabic mb-3 text-emerald-100 leading-loose">
           فَبِأَيِّ آلَاءِ رَبِّكُمَا تُكَذِّبَانِ
         </p>
-        <div className="bg-slate-900/50 p-3 rounded-2xl border border-slate-700/40">
-          <p className="text-xs text-slate-300 italic font-medium leading-relaxed">
-            "So which of the favors of your Lord would you deny?"
-          </p>
-          <span className="text-[11px] text-emerald-400 font-bold block mt-1.5">— Surah Ar-Rahman: 13</span>
-        </div>
+        <p className="text-xs text-slate-300 italic font-medium">"So which of the favors of your Lord would you deny?"</p>
+        <span className="text-[11px] text-emerald-400 font-bold block mt-1.5">— Surah Ar-Rahman: 13</span>
       </div>
 
       <div>
@@ -301,16 +171,14 @@ function HomeScreen({ setActiveTab, setCurrentTool }) {
 
 function QuickFeatureItem({ icon, label }) {
   return (
-    <div className="bg-slate-800/80 hover:bg-slate-800 p-3.5 rounded-2xl flex flex-col items-center justify-center gap-2 transition duration-200 cursor-pointer border border-slate-700/60 shadow-sm h-full active:scale-95 group">
-      <div className="p-2.5 bg-slate-900/70 rounded-xl group-hover:scale-110 transition-transform">{icon}</div>
+    <div className="bg-slate-800/80 p-3.5 rounded-2xl flex flex-col items-center justify-center gap-2 cursor-pointer border border-slate-700/60 shadow-sm active:scale-95">
+      <div className="p-2.5 bg-slate-900/70 rounded-xl">{icon}</div>
       <span className="text-[11px] font-semibold text-slate-200">{label}</span>
     </div>
   );
 }
 
-// 2. Quran Screen with Indo-Pak Script Auto-Download
 function QuranScreen({ setSelectedSurah }) {
-  const [searchQuery, setSearchQuery] = useState('');
   const [downloading, setDownloading] = useState(false);
   const [isDownloaded, setIsDownloaded] = useState(false);
 
@@ -325,7 +193,6 @@ function QuranScreen({ setSelectedSurah }) {
       const arabicRes = await fetch('https://api.alquran.cloud/v1/quran/ar.indopak');
       const data = await res.json();
       const arabicData = await arabicRes.json();
-      
       if (data.code === 200 && arabicData.code === 200) {
         const mergedSurahs = data.data.surahs.map((surah, sIdx) => ({
           ...surah,
@@ -338,78 +205,44 @@ function QuranScreen({ setSelectedSurah }) {
         localStorage.setItem('full_quran_indopak', JSON.stringify(mergedSurahs));
         setIsDownloaded(true);
       }
-    } catch (err) {
-      alert("Please check your internet connection to download Quran.");
+    } catch (e) {
+      alert("Download failed. Check internet.");
     } finally {
       setDownloading(false);
     }
   };
 
-  const filteredSurahs = surahsList.filter(surah => 
-    surah.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    surah.meaning.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    surah.no.toString().includes(searchQuery)
-  );
-
   return (
     <div className="space-y-3 pb-4">
       {!isDownloaded ? (
-        <div className="bg-gradient-to-r from-emerald-800 to-teal-900 border border-emerald-600/40 rounded-2xl p-4 text-white shadow-md flex items-center justify-between">
-          <div className="space-y-0.5">
-            <h4 className="text-xs font-bold">Download Indo-Pak Quran (Offline)</h4>
-            <p className="text-[10px] text-emerald-200">Authentic South Asian Script (~3MB)</p>
+        <div className="bg-emerald-900 border border-emerald-600 rounded-2xl p-4 text-white flex items-center justify-between shadow-md">
+          <div>
+            <h4 className="text-xs font-bold">Download Indo-Pak Quran</h4>
+            <p className="text-[10px] text-emerald-200">Required for offline reading (~3MB)</p>
           </div>
-          <button 
-            onClick={downloadFullQuran}
-            disabled={downloading}
-            className="bg-white text-emerald-900 px-3.5 py-2 rounded-xl text-xs font-bold hover:bg-emerald-100 transition flex items-center gap-1.5 shadow"
-          >
+          <button onClick={downloadFullQuran} disabled={downloading} className="bg-white text-emerald-900 px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow">
             {downloading ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
             {downloading ? 'Downloading...' : 'Download'}
           </button>
         </div>
       ) : (
-        <div className="bg-slate-800/90 border border-slate-700/80 rounded-2xl p-3 text-emerald-400 text-xs font-semibold flex items-center gap-2 shadow-sm">
-          <CheckCircle size={16} />
-          <span>Indo-Pak Quran script saved offline successfully!</span>
+        <div className="bg-slate-800 border border-slate-700 rounded-2xl p-3 text-emerald-400 text-xs font-semibold flex items-center gap-2">
+          <CheckCircle size={16} /> Quran saved offline!
         </div>
       )}
 
-      <div className="relative mb-2">
-        <input 
-          type="text" 
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Search Surah by name, meaning or number..." 
-          className="w-full bg-slate-800/90 text-sm text-white px-4 py-3 pl-11 rounded-2xl border border-slate-700/80 focus:outline-none focus:border-emerald-500 shadow-inner transition"
-        />
-        <Search size={18} className="absolute left-3.5 top-3.5 text-slate-400" />
-      </div>
-
-      <div className="flex justify-between items-center px-1">
-        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Surah List (114)</h3>
-        <span className="text-[10px] text-emerald-400 font-medium">Indo-Pak Script</span>
-      </div>
-
+      <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Surah List (114)</h3>
       <div className="space-y-2.5">
-        {filteredSurahs.map((surah) => (
-          <div 
-            key={surah.no} 
-            onClick={() => setSelectedSurah(surah)}
-            className="bg-slate-800/80 p-4 rounded-2xl flex justify-between items-center border border-slate-700/70 hover:border-emerald-500/50 hover:bg-slate-800 transition duration-200 cursor-pointer shadow-sm active:scale-[0.98]"
-          >
+        {surahsList.map((surah) => (
+          <div key={surah.no} onClick={() => setSelectedSurah(surah)} className="bg-slate-800/80 p-4 rounded-2xl flex justify-between items-center border border-slate-700/70 hover:border-emerald-500 cursor-pointer shadow-sm active:scale-98">
             <div className="flex items-center gap-3.5">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 font-bold flex items-center justify-center text-sm border border-emerald-500/20 shadow-inner">
-                {surah.no}
-              </div>
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 font-bold flex items-center justify-center text-sm border border-emerald-500/20">{surah.no}</div>
               <div>
-                <h4 className="text-sm font-bold text-white tracking-tight">{surah.name}</h4>
-                <p className="text-[11px] text-slate-400 font-medium mt-0.5">{surah.meaning} • {surah.versesCount} Verses</p>
+                <h4 className="text-sm font-bold text-white">{surah.name}</h4>
+                <p className="text-[11px] text-slate-400">{surah.meaning} • {surah.versesCount} Verses</p>
               </div>
             </div>
-            <div className="text-right">
-              <span className="text-xl font-arabic text-emerald-300">{surah.arabic}</span>
-            </div>
+            <span className="text-xl font-arabic text-emerald-300">{surah.arabic}</span>
           </div>
         ))}
       </div>
@@ -417,62 +250,49 @@ function QuranScreen({ setSelectedSurah }) {
   );
 }
 
-// 3. Surah Detail View
 function SurahDetail({ surah }) {
   const [verses, setVerses] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const savedQuran = localStorage.getItem('full_quran_indopak');
-    if (savedQuran) {
-      const quranData = JSON.parse(savedQuran);
-      const currentSurah = quranData.find(s => s.number === surah.no);
-      if (currentSurah && currentSurah.ayahs) {
-        setVerses(currentSurah.ayahs.map(a => ({ id: a.numberInSurah, arabic: a.text, translation: a.translation })));
+    const saved = localStorage.getItem('full_quran_indopak');
+    if (saved) {
+      const data = JSON.parse(saved);
+      const cur = data.find(s => s.number === surah.no);
+      if (cur && cur.ayahs) {
+        setVerses(cur.ayahs.map(a => ({ id: a.numberInSurah, arabic: a.text, translation: a.translation })));
         setLoading(false);
         return;
       }
     }
-    if (surah.verses && surah.verses.length > 0) {
-      setVerses(surah.verses);
-    }
+    if (surah.verses) setVerses(surah.verses);
     setLoading(false);
   }, [surah]);
 
   return (
     <div className="space-y-4 pb-4">
-      <div className="bg-gradient-to-r from-emerald-700 to-teal-800 rounded-3xl p-5 text-center text-white shadow-xl border border-emerald-500/20">
-        <h2 className="text-xl font-extrabold tracking-tight">{surah.name}</h2>
-        <p className="text-xs text-emerald-200 font-medium mt-1">{surah.meaning} • {surah.versesCount} Verses</p>
+      <div className="bg-gradient-to-r from-emerald-700 to-teal-800 rounded-3xl p-5 text-center text-white shadow-xl">
+        <h2 className="text-xl font-extrabold">{surah.name}</h2>
+        <p className="text-xs text-emerald-200 mt-1">{surah.meaning} • {surah.versesCount} Verses</p>
         <p className="text-3xl font-arabic mt-3 text-emerald-100">{surah.arabic}</p>
       </div>
 
       <div className="space-y-3">
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-20 space-y-3 text-slate-400">
-            <Loader2 className="animate-spin text-emerald-400" size={32} />
-            <p className="text-xs">Loading Verses...</p>
-          </div>
+          <div className="flex justify-center py-20 text-slate-400"><Loader2 className="animate-spin text-emerald-400" size={32} /></div>
         ) : verses.length > 0 ? (
-          verses.map((v) => (
-            <div key={v.id} className="bg-slate-800/80 p-4 rounded-2xl border border-slate-700/80 space-y-3 shadow-sm">
-              <div className="flex justify-between items-center text-xs text-emerald-400 font-bold">
-                <span className="bg-emerald-500/15 px-3 py-1 rounded-full border border-emerald-500/30">Ayah {v.id}</span>
-                <Volume2 size={16} className="cursor-pointer text-slate-400 hover:text-white transition" />
-              </div>
+          verses.map(v => (
+            <div key={v.id} className="bg-slate-800/80 p-4 rounded-2xl border border-slate-700 space-y-3">
+              <span className="bg-emerald-500/15 text-emerald-400 text-xs px-3 py-1 rounded-full font-bold">Ayah {v.id}</span>
               <p className="text-right text-2xl font-arabic text-emerald-100 leading-loose">{v.arabic}</p>
-              <div className="pt-3 border-t border-slate-700/85 text-sm font-medium text-slate-300">{v.translation || v.hinglish}</div>
+              <div className="pt-3 border-t border-slate-700 text-sm text-slate-300">{v.translation || v.hinglish}</div>
             </div>
           ))
         ) : (
-          <div className="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-8 text-center space-y-3 my-6">
-            <div className="w-12 h-12 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center mx-auto">
-              <BookOpen size={24} />
-            </div>
-            <h4 className="text-sm font-bold text-white">Download Required for Offline Reading</h4>
-            <p className="text-xs text-slate-400 max-w-xs mx-auto leading-relaxed">
-              Please click the <span className="text-emerald-300 font-semibold">"Download"</span> button on the Quran tab to download all 114 Surahs in Indo-Pak script.
-            </p>
+          <div className="bg-slate-800/60 p-8 rounded-2xl text-center space-y-3">
+            <BookOpen size={24} className="mx-auto text-emerald-400" />
+            <h4 className="text-sm font-bold text-white">Download Required</h4>
+            <p className="text-xs text-slate-400">Please download the Quran from the Quran tab to read offline.</p>
           </div>
         )}
       </div>
@@ -480,144 +300,69 @@ function SurahDetail({ surah }) {
   );
 }
 
-// 4. Dua Screen
 function DuaScreen() {
   return (
     <div className="space-y-3 pb-4">
-      <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider px-1">Hisnul Muslim Categories</h3>
+      <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider px-1">Hisnul Muslim</h3>
       <div className="grid grid-cols-2 gap-3">
-        <DuaCategoryCard title="Morning & Evening" count="25 Duas" />
-        <DuaCategoryCard title="Prayer & Wudu" count="18 Duas" />
-        <DuaCategoryCard title="Home & Family" count="12 Duas" />
-        <DuaCategoryCard title="Traveling" count="10 Duas" />
+        <div className="bg-slate-800 p-4 rounded-2xl border border-slate-700 h-28 flex flex-col justify-between"><h4 className="text-sm font-bold text-white">Morning & Evening</h4><span className="text-xs text-slate-400">25 Duas</span></div>
+        <div className="bg-slate-800 p-4 rounded-2xl border border-slate-700 h-28 flex flex-col justify-between"><h4 className="text-sm font-bold text-white">Prayer & Wudu</h4><span className="text-xs text-slate-400">18 Duas</span></div>
       </div>
     </div>
   );
 }
 
-function DuaCategoryCard({ title, count }) {
-  return (
-    <div className="bg-slate-800/80 p-4 rounded-2xl border border-slate-700/70 hover:border-emerald-500/50 transition duration-200 cursor-pointer flex flex-col justify-between h-28 shadow-sm active:scale-95">
-      <h4 className="text-sm font-bold text-white tracking-tight">{title}</h4>
-      <div className="flex justify-between items-center text-xs text-slate-400 font-medium">
-        <span className="bg-slate-900/60 px-2.5 py-1 rounded-lg">{count}</span>
-        <div className="w-7 h-7 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center">
-          <ChevronRight size={16} />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// 5. Qibla Screen
 function QiblaScreen() {
   return (
-    <div className="flex flex-col items-center justify-center py-6 text-center space-y-6">
-      <h3 className="text-sm font-bold text-slate-300 uppercase tracking-wider">Qibla Direction</h3>
-      <div className="w-64 h-64 rounded-full border-4 border-slate-700 relative flex items-center justify-center bg-slate-800/80 shadow-2xl">
-        <div className="absolute inset-0 flex items-center justify-center">
-          <Compass size={84} className="text-emerald-400 animate-pulse drop-shadow-[0_0_15px_rgba(52,211,153,0.4)]" />
-        </div>
-        <div className="absolute top-3 text-xs font-bold text-emerald-400 tracking-wider">N</div>
-        <div className="absolute bottom-3 text-xs font-bold text-slate-500 tracking-wider">S</div>
+    <div className="flex flex-col items-center justify-center py-10 text-center space-y-6">
+      <h3 className="text-sm font-bold text-slate-300">Qibla Direction</h3>
+      <div className="w-64 h-64 rounded-full border-4 border-slate-700 relative flex items-center justify-center bg-slate-800 shadow-2xl">
+        <Compass size={84} className="text-emerald-400 animate-pulse" />
       </div>
-      <p className="text-xs text-slate-400 max-w-xs font-medium leading-relaxed px-4">
-        Point your phone flat towards an open area. The needle points towards the Kaaba in Makkah.
-      </p>
     </div>
   );
 }
 
-// 6. More Screen
 function MoreScreen({ setCurrentTool }) {
   return (
     <div className="space-y-2.5 pb-4">
-      <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider px-1 mb-2">Utilities & Tools</h3>
-      <MoreItem title="99 Names of Allah (Asma-ul-Husna)" onClick={() => setCurrentTool('names')} />
-      <MoreItem title="Digital Tasbih Counter" onClick={() => setCurrentTool('tasbih')} />
-      <MoreItem title="Islamic Hijri Calendar" onClick={() => {}} />
-      <MoreItem title="Nearby Mosque Locator" onClick={() => {}} />
-      <MoreItem title="Zakat Calculator" onClick={() => {}} />
+      <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider px-1 mb-2">Tools</h3>
+      <div onClick={() => setCurrentTool('names')} className="bg-slate-800 p-4 rounded-2xl flex justify-between items-center border border-slate-700 cursor-pointer"><span className="text-sm text-white font-semibold">99 Names of Allah</span><ChevronRight size={16} className="text-slate-400" /></div>
+      <div onClick={() => setCurrentTool('tasbih')} className="bg-slate-800 p-4 rounded-2xl flex justify-between items-center border border-slate-700 cursor-pointer"><span className="text-sm text-white font-semibold">Digital Tasbih Counter</span><ChevronRight size={16} className="text-slate-400" /></div>
     </div>
   );
 }
 
-function MoreItem({ title, onClick }) {
-  return (
-    <div onClick={onClick} className="bg-slate-800/80 p-4 rounded-2xl flex justify-between items-center border border-slate-700/70 hover:bg-slate-800 transition duration-200 cursor-pointer shadow-sm active:scale-[0.98]">
-      <span className="text-sm text-white font-semibold">{title}</span>
-      <div className="w-7 h-7 bg-slate-700/60 text-slate-300 rounded-full flex items-center justify-center">
-        <ChevronRight size={16} />
-      </div>
-    </div>
-  );
-}
-
-// 7. Tasbih View
 function TasbihView() {
   const [count, setCount] = useState(0);
-  const [selectedZikr, setSelectedZikr] = useState("SubhanAllah");
-
-  const zikrs = [
-    { name: "SubhanAllah", arabic: "سُبْحَانَ ٱللَّٰهِ" },
-    { name: "Alhamdulillah", arabic: "ٱلْحَمْدُ لِلَّٰهِ" },
-    { name: "Allahu Akbar", arabic: "ٱللَّٰهُ أَكْبَرُ" },
-    { name: "Astaghfirullah", arabic: "أَسْتَغْفِرُ ٱللَّٰهَ" }
-  ];
-
   return (
-    <div className="flex flex-col items-center justify-center space-y-6 py-4">
-      <div className="flex gap-2 overflow-x-auto w-full pb-2 scrollbar-none px-1">
-        {zikrs.map((item, idx) => (
-          <button
-            key={idx}
-            onClick={() => { setSelectedZikr(item.name); setCount(0); }}
-            className={`px-4 py-2 rounded-xl text-xs whitespace-nowrap transition duration-200 border font-bold ${
-              selectedZikr === item.name ? 'bg-emerald-600 text-white border-emerald-500 shadow-md' : 'bg-slate-800 text-slate-300 border-slate-700'
-            }`}
-          >
-            {item.name}
-          </button>
-        ))}
+    <div className="flex flex-col items-center justify-center space-y-6 py-6">
+      <div className="text-center bg-slate-800 w-full p-4 rounded-3xl border border-slate-700">
+        <p className="text-3xl font-arabic text-emerald-300">سُبْحَانَ ٱللَّٰهِ</p>
+        <p className="text-xs text-slate-400 mt-1 uppercase font-semibold">SubhanAllah</p>
       </div>
-
-      <div className="text-center space-y-2 bg-slate-800/60 w-full p-4 rounded-3xl border border-slate-700/60">
-        <p className="text-3xl font-arabic text-emerald-300">{zikrs.find(z => z.name === selectedZikr)?.arabic}</p>
-        <p className="text-xs text-slate-400 font-semibold uppercase tracking-wider">{selectedZikr}</p>
-      </div>
-
-      <div className="relative flex items-center justify-center py-2">
-        <button
-          onClick={() => setCount(count + 1)}
-          className="w-52 h-52 rounded-full bg-gradient-to-tr from-emerald-600 via-teal-500 to-emerald-500 shadow-2xl shadow-emerald-950/60 flex flex-col items-center justify-center text-white active:scale-95 transition duration-150 border-4 border-emerald-300/30 ring-8 ring-emerald-950/30"
-        >
-          <span className="text-7xl font-black tracking-tight">{count}</span>
-          <span className="text-[10px] uppercase tracking-widest text-emerald-100 font-bold mt-1">Tap to Count</span>
-        </button>
-      </div>
-
-      <button 
-        onClick={() => setCount(0)}
-        className="flex items-center gap-1.5 text-xs font-bold text-slate-400 hover:text-rose-400 bg-slate-800/80 px-5 py-3 rounded-xl border border-slate-700 transition shadow-sm active:scale-95"
-      >
-        <RotateCcw size={14} /> Reset Counter
+      <button onClick={() => setCount(count + 1)} className="w-52 h-52 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-500 shadow-2xl flex flex-col items-center justify-center text-white active:scale-95 transition border-4 border-emerald-300/30">
+        <span className="text-7xl font-black">{count}</span>
+        <span className="text-[10px] uppercase font-bold mt-1">Tap to Count</span>
+      </button>
+      <button onClick={() => setCount(0)} className="flex items-center gap-1.5 text-xs font-bold text-slate-400 hover:text-rose-400 bg-slate-800 px-5 py-3 rounded-xl border border-slate-700">
+        <RotateCcw size={14} /> Reset
       </button>
     </div>
   );
 }
 
-// 8. 99 Names View
 function NamesListView() {
   return (
     <div className="space-y-2.5 pb-4">
       <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider px-1 mb-2">Asma-ul-Husna</h3>
       {namesList.map((item) => (
-        <div key={item.no} className="bg-slate-800/80 p-3.5 rounded-2xl flex justify-between items-center border border-slate-700/70 shadow-sm">
+        <div key={item.no} className="bg-slate-800 p-3.5 rounded-2xl flex justify-between items-center border border-slate-700">
           <div className="flex items-center gap-3.5">
-            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 font-bold flex items-center justify-center text-sm border border-emerald-500/20">{item.no}</div>
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 font-bold flex items-center justify-center text-xs">{item.no}</div>
             <div>
-              <h4 className="text-sm font-bold text-white tracking-tight">{item.name}</h4>
-              <p className="text-[11px] text-slate-400 font-medium">{item.meaning}</p>
+              <h4 className="text-sm font-bold text-white">{item.name}</h4>
+              <p className="text-[11px] text-slate-400">{item.meaning}</p>
             </div>
           </div>
           <span className="text-xl font-arabic text-emerald-300">{item.arabic}</span>
