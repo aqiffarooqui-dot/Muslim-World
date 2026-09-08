@@ -9,12 +9,12 @@ export default function App() {
   const [selectedSurah, setSelectedSurah] = useState(null);
 
   return (
-    <div className="flex justify-center bg-gray-950 min-h-screen text-gray-100 font-sans selection:bg-emerald-500 selection:text-white">
-      {/* Mobile App Frame (iOS Container Style) */}
-      <div className="w-full max-w-md bg-slate-900 flex flex-col h-screen shadow-2xl relative overflow-hidden border-x border-slate-800/80">
+    <div className="fixed inset-0 bg-slate-950 flex justify-center items-center overflow-hidden font-sans selection:bg-emerald-500 selection:text-white">
+      {/* True Mobile App Viewport Container */}
+      <div className="w-full h-full sm:max-w-md sm:h-[92vh] sm:rounded-[40px] sm:border-[8px] sm:border-slate-800 bg-slate-900 flex flex-col relative overflow-hidden shadow-2xl">
         
         {/* iOS Style Top Header */}
-        <header className="ios-glass sticky top-0 border-b border-slate-800/60 px-4 py-3.5 flex justify-between items-center z-30 shadow-sm">
+        <header className="ios-glass sticky top-0 border-b border-slate-800/60 px-4 py-3.5 flex justify-between items-center z-30 shadow-sm shrink-0">
           <div className="flex items-center gap-2.5">
             {(currentTool || selectedSurah) && (
               <button 
@@ -47,8 +47,8 @@ export default function App() {
           )}
         </header>
 
-        {/* Main Content Area */}
-        <main className="flex-1 overflow-y-auto pb-28 pt-1">
+        {/* Scrollable Main Content Area */}
+        <main className="flex-1 overflow-y-auto pb-28 pt-1 scrollbar-none">
           {selectedSurah ? (
             <SurahDetail surah={selectedSurah} />
           ) : currentTool === 'tasbih' ? (
@@ -68,7 +68,7 @@ export default function App() {
 
         {/* iOS Frosted Glass Bottom Navigation Bar */}
         {!currentTool && !selectedSurah && (
-          <nav className="absolute bottom-0 left-0 right-0 ios-glass border-t border-slate-800/80 flex justify-around items-center h-20 pb-4 px-2 z-30 shadow-lg">
+          <nav className="absolute bottom-0 left-0 right-0 ios-glass border-t border-slate-800/80 flex justify-around items-center h-20 pb-4 px-2 z-30 shadow-lg shrink-0">
             <NavItem icon={<Home size={22} />} label="Home" isActive={activeTab === 'home'} onClick={() => setActiveTab('home')} />
             <NavItem icon={<BookOpen size={22} />} label="Quran" isActive={activeTab === 'quran'} onClick={() => setActiveTab('quran')} />
             <NavItem icon={<Heart size={22} />} label="Dua" isActive={activeTab === 'dua'} onClick={() => setActiveTab('dua')} />
@@ -98,11 +98,10 @@ function NavItem({ icon, label, isActive, onClick }) {
   );
 }
 
-// 1. Home Screen (iOS Card Style)
+// 1. Home Screen
 function HomeScreen({ setActiveTab, setCurrentTool }) {
   return (
     <div className="p-4 space-y-4">
-      {/* Prayer Time iOS Card */}
       <div className="bg-gradient-to-br from-emerald-600 to-teal-800 rounded-3xl p-5 text-white shadow-xl shadow-emerald-950/30 relative overflow-hidden border border-emerald-500/20">
         <div className="absolute -right-8 -bottom-8 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
         <div className="relative z-10">
@@ -126,7 +125,6 @@ function HomeScreen({ setActiveTab, setCurrentTool }) {
         </div>
       </div>
 
-      {/* Daily Ayah iOS Card */}
       <div className="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 shadow-lg backdrop-blur-xl">
         <div className="flex justify-between items-center mb-2">
           <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wide">Ayah of the Day</span>
@@ -140,7 +138,6 @@ function HomeScreen({ setActiveTab, setCurrentTool }) {
         </p>
       </div>
 
-      {/* Quick Features iOS Grid */}
       <div>
         <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3 px-1">Quick Features</h3>
         <div className="grid grid-cols-4 gap-3 text-center">
