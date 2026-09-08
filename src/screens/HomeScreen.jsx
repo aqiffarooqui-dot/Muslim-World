@@ -4,6 +4,20 @@ import { Home, BookOpen, Heart, Compass, Menu, Bell, Search, MapPin, Volume2, Ca
 export default function HomeScreen({ setActiveTab, setCurrentTool }) {
   const [locationName, setLocationName] = useState("New Delhi, India");
   const [loadingLoc, setLoadingLoc] = useState(false);
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  // Live Digital Clock Timer
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Format Islamic / Gregorian Date
+  const options = { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' };
+  const formattedDate = currentTime.toLocaleDateString('en-US', options);
+  const formattedTime = currentTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
   // Function to fetch real-time GPS location
   const fetchUserLocation = () => {
@@ -17,7 +31,6 @@ export default function HomeScreen({ setActiveTab, setCurrentTool }) {
       async (position) => {
         const { latitude, longitude } = position.coords;
         try {
-          // Reverse geocoding to get city name using open API
           const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
           const data = await res.json();
           const city = data.address.city || data.address.town || data.address.state || "Current Location";
@@ -40,7 +53,7 @@ export default function HomeScreen({ setActiveTab, setCurrentTool }) {
 
   return (
     <div className="space-y-4 pb-4">
-      {/* Location Status Bar */}
+      {/* Location & Live Clock Bar */}
       <div className="flex justify-between items-center px-1">
         <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-400">
           <MapPin size={13} />
@@ -54,23 +67,23 @@ export default function HomeScreen({ setActiveTab, setCurrentTool }) {
         </button>
       </div>
 
-      {/* Enhanced Prayer Card */}
+      {/* Enhanced Prayer Card with Live Local Time */}
       <div className="bg-gradient-to-br from-emerald-600 via-teal-700 to-emerald-900 rounded-3xl p-5 text-white shadow-xl shadow-emerald-950/40 relative overflow-hidden border border-emerald-400/20">
         <div className="absolute -right-6 -bottom-6 w-36 h-36 bg-white/10 rounded-full blur-3xl pointer-events-none"></div>
         <div className="relative z-10">
           <div className="flex justify-between items-center mb-3">
             <div className="flex items-center gap-1.5 bg-emerald-950/50 backdrop-blur-md px-3 py-1 rounded-full border border-emerald-400/20 text-[11px] font-medium text-emerald-200">
               <Calendar size={12} className="text-emerald-400" />
-              <span>18 Rabiul Awwal 1448 AH</span>
+              <span>{formattedDate}</span>
             </div>
-            <span className="text-[11px] bg-white/10 px-2.5 py-1 rounded-full text-emerald-100 font-medium">Asr in 01:25 hr</span>
           </div>
           
           <div className="text-center my-4 bg-black/10 backdrop-blur-sm py-4 rounded-2xl border border-white/10">
             <div className="flex items-center justify-center gap-1 text-xs text-emerald-200 font-medium tracking-wider uppercase mb-1">
-              <Clock size={13} /> Dhuhr Time
+              <Clock size={13} /> Live Local Time
             </div>
-            <p className="text-4xl font-extrabold tracking-tight text-white">12:34 PM</p>
+            <p className="text-3xl font-extrabold tracking-tight text-white">{formattedTime}</p>
+            <p className="text-[11px] text-emerald-200 mt-1 font-medium">Next: Asr in 01:25 hr</p>
           </div>
 
           <div className="grid grid-cols-5 gap-1.5 pt-1 text-center text-xs">
