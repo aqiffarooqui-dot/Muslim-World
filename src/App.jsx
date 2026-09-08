@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Home, BookOpen, Heart, Compass, Menu, Bell, Search, MapPin, ArrowLeft, ChevronRight, RotateCcw, Volume2, Calendar, Clock, Sparkles, Navigation, Download, CheckCircle, Loader2 } from 'lucide-react';
+import { Home, BookOpen, Heart, Compass, Menu, Bell, Search, MapPin, ArrowLeft, ChevronRight, RotateCcw, Volume2, Calendar, Clock, Sparkles, Navigation, Download, CheckCircle, Loader2, X } from 'lucide-react';
 import { surahsList } from './data/quranData';
 import { namesList } from './data/namesData';
 
@@ -9,18 +9,30 @@ export default function App() {
   const [selectedSurah, setSelectedSurah] = useState(null);
   const [updateAvailable, setUpdateAvailable] = useState(false);
 
-  // Check for updates automatically in the background
+  // Checks version.json against current app version ("1.0.0")
   useEffect(() => {
     const currentVersion = "1.0.0";
+    const dismissedVersion = localStorage.getItem('dismissed_version');
+
     fetch('/version.json?' + new Date().getTime())
       .then(res => res.json())
       .then(data => {
-        if (data.version && data.version !== currentVersion) {
+        // Pop-up sirf tab aayega jab version change hoga aur user ne use dismiss nahi kiya hoga
+        if (data.version && data.version !== currentVersion && data.version !== dismissedVersion) {
           setUpdateAvailable(true);
         }
       })
       .catch(() => {});
   }, []);
+
+  const dismissUpdate = () => {
+    setUpdateAvailable(false);
+    fetch('/version.json')
+      .then(res => res.json())
+      .then(data => {
+        if (data.version) localStorage.setItem('dismissed_version', data.version);
+      }).catch(() => {});
+  };
 
   return (
     <div className="fixed inset-0 bg-[#090d16] flex justify-center items-center overflow-hidden font-sans selection:bg-emerald-500 selection:text-white">
@@ -28,7 +40,7 @@ export default function App() {
         
         {/* Top Status Bar */}
         <div className="bg-[#0f172a]/90 backdrop-blur-md pt-3 pb-1 px-6 flex justify-between items-center text-xs font-semibold text-slate-400 shrink-0">
-          <span>02:25</span>
+          <span>02:40</span>
           <div className="w-20 h-4 bg-black rounded-full mx-auto absolute left-1/2 -translate-x-1/2 top-2"></div>
           <div className="flex items-center gap-1.5">
             <span className="text-[10px]">5G</span>
@@ -81,19 +93,27 @@ export default function App() {
           )}
         </main>
 
-        {/* In-App Update Popup Notification */}
+        {/* Update Popup - Yeh sirf tabhi dikhega jab tu version.json change karega */}
         {updateAvailable && (
           <div className="absolute bottom-24 left-4 right-4 bg-slate-900/95 border border-emerald-500/50 p-4 rounded-3xl shadow-2xl backdrop-blur-xl z-50 flex items-center justify-between text-white animate-bounce">
             <div className="space-y-0.5">
               <h4 className="text-xs font-bold text-emerald-400">New Update Available! ✨</h4>
               <p className="text-[10px] text-slate-300">Tap update to get the latest features.</p>
             </div>
-            <button 
-              onClick={() => window.location.reload()} 
-              className="bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-md transition active:scale-95"
-            >
-              Update Now
-            </button>
+            <div className="flex items-center gap-2">
+              <button 
+                onClick={() => window.location.reload()} 
+                className="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-2 rounded-xl text-xs font-bold shadow-md transition active:scale-95"
+              >
+                Update Now
+              </button>
+              <button 
+                onClick={dismissUpdate} 
+                className="w-7 h-7 bg-slate-800 text-slate-400 hover:text-white rounded-full flex items-center justify-center transition"
+              >
+                <X size={14} />
+              </button>
+            </div>
           </div>
         )}
 
@@ -163,7 +183,7 @@ function HomeScreen({ setActiveTab, setCurrentTool }) {
         
         <div className="text-center my-4 bg-black/10 py-4 rounded-2xl border border-white/10">
           <p className="text-xs text-emerald-200 font-medium tracking-wider uppercase mb-1">Local Time</p>
-          <p className="text-3xl font-extrabold tracking-tight text-white">{timeString || "02:25:00 AM"}</p>
+          <p className="text-3xl font-extrabold tracking-tight text-white">{timeString || "02:40:00 AM"}</p>
         </div>
 
         <div className="grid grid-cols-5 gap-1.5 text-center text-xs">
