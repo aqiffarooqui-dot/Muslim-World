@@ -14,7 +14,7 @@ export default function App() {
         
         {/* Top Status Bar */}
         <div className="bg-[#0f172a]/90 backdrop-blur-md pt-3 pb-1 px-6 flex justify-between items-center text-xs font-semibold text-slate-400 shrink-0">
-          <span>02:19</span>
+          <span>02:22</span>
           <div className="w-20 h-4 bg-black rounded-full mx-auto absolute left-1/2 -translate-x-1/2 top-2"></div>
           <div className="flex items-center gap-1.5">
             <span className="text-[10px]">5G</span>
@@ -133,7 +133,7 @@ function HomeScreen({ setActiveTab, setCurrentTool }) {
         
         <div className="text-center my-4 bg-black/10 py-4 rounded-2xl border border-white/10">
           <p className="text-xs text-emerald-200 font-medium tracking-wider uppercase mb-1">Local Time</p>
-          <p className="text-3xl font-extrabold tracking-tight text-white">{timeString || "02:19:00 AM"}</p>
+          <p className="text-3xl font-extrabold tracking-tight text-white">{timeString || "02:22:00 AM"}</p>
         </div>
 
         <div className="grid grid-cols-5 gap-1.5 text-center text-xs">
@@ -183,30 +183,41 @@ function QuranScreen({ setSelectedSurah }) {
   const [isDownloaded, setIsDownloaded] = useState(false);
 
   useEffect(() => {
-    if (localStorage.getItem('full_quran_indopak')) setIsDownloaded(true);
+    if (localStorage.getItem('full_quran_multilang')) setIsDownloaded(true);
   }, []);
 
   const downloadFullQuran = async () => {
     setDownloading(true);
     try {
-      const res = await fetch('https://api.alquran.cloud/v1/quran/en.asad');
-      const arabicRes = await fetch('https://api.alquran.cloud/v1/quran/ar.indopak');
-      const data = await res.json();
-      const arabicData = await arabicRes.json();
-      if (data.code === 200 && arabicData.code === 200) {
-        const mergedSurahs = data.data.surahs.map((surah, sIdx) => ({
+      const resEn = await fetch('https://api.alquran.cloud/v1/quran/en.asad');
+      const resUr = await fetch('https://api.alquran.cloud/v1/quran/ur.jalandhry');
+      const resAr = await fetch('https://api.alquran.cloud/v1/quran/ar.indopak');
+
+      const dataEn = await resEn.json();
+      const dataUr = await resUr.json();
+      const dataAr = await resAr.json();
+
+      if (dataEn.code === 200 && dataUr.code === 200 && dataAr.code === 200) {
+        const mergedSurahs = dataEn.data.surahs.map((surah, sIdx) => ({
           ...surah,
-          ayahs: surah.ayahs.map((ayah, aIdx) => ({
-            ...ayah,
-            text: arabicData.data.surahs[sIdx].ayahs[aIdx].text,
-            translation: ayah.text
-          }))
+          ayahs: surah.ayahs.map((ayah, aIdx) => {
+            const staticSurah = surahsList.find(s => s.no === surah.number);
+            const staticAyah = staticSurah && staticSurah.verses ? staticSurah.verses.find(v => v.id === ayah.numberInSurah) : null;
+            
+            return {
+              ...ayah,
+              text: dataAr.data.surahs[sIdx].ayahs[aIdx].text,
+              english: ayah.text,
+              urdu: dataUr.data.surahs[sIdx].ayahs[aIdx].text,
+              hinglish: staticAyah ? staticAyah.hinglish : `Ayah ${ayah.numberInSurah} translation updating offline.`
+            };
+          })
         }));
-        localStorage.setItem('full_quran_indopak', JSON.stringify(mergedSurahs));
+        localStorage.setItem('full_quran_multilang', JSON.stringify(mergedSurahs));
         setIsDownloaded(true);
       }
     } catch (e) {
-      alert("Download failed. Check internet.");
+      alert("Download failed. Check internet connection.");
     } finally {
       setDownloading(false);
     }
@@ -217,8 +228,8 @@ function QuranScreen({ setSelectedSurah }) {
       {!isDownloaded ? (
         <div className="bg-emerald-900 border border-emerald-600 rounded-2xl p-4 text-white flex items-center justify-between shadow-md">
           <div>
-            <h4 className="text-xs font-bold">Download Indo-Pak Quran</h4>
-            <p className="text-[10px] text-emerald-200">Required for offline reading (~3MB)</p>
+            <h4 className="text-xs font-bold">Download Multi-Language Quran</h4>
+            <p className="text-[10px] text-emerald-200">Includes English, Urdu & Hinglish (~4MB)</p>
           </div>
           <button onClick={downloadFullQuran} disabled={downloading} className="bg-white text-emerald-900 px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow">
             {downloading ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
@@ -227,7 +238,7 @@ function QuranScreen({ setSelectedSurah }) {
         </div>
       ) : (
         <div className="bg-slate-800 border border-slate-700 rounded-2xl p-3 text-emerald-400 text-xs font-semibold flex items-center gap-2">
-          <CheckCircle size={16} /> Quran saved offline!
+          <CheckCircle size={16} /> Multi-Language Quran saved offline!
         </div>
       )}
 
@@ -253,19 +264,30 @@ function QuranScreen({ setSelectedSurah }) {
 function SurahDetail({ surah }) {
   const [verses, setVerses] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [lang, setLang] = useState('hinglish');
 
   useEffect(() => {
-    const saved = localStorage.getItem('full_quran_indopak');
+    const saved = localStorage.getItem('full_quran_multilang');
     if (saved) {
       const data = JSON.parse(saved);
       const cur = data.find(s => s.number === surah.no);
       if (cur && cur.ayahs) {
-        setVerses(cur.ayahs.map(a => ({ id: a.numberInSurah, arabic: a.text, translation: a.translation })));
+        setVerses(cur.ayahs.map(a => ({ 
+          id: a.numberInSurah, 
+          arabic: a.text, 
+          english: a.english, 
+          urdu: a.urdu, 
+          hinglish: a.hinglish 
+        })));
         setLoading(false);
         return;
       }
     }
-    if (surah.verses) setVerses(surah.verses);
+    if (surah.verses && surah.verses.length > 0) {
+      setVerses(surah.verses);
+    } else {
+      setVerses([]);
+    }
     setLoading(false);
   }, [surah]);
 
@@ -277,6 +299,27 @@ function SurahDetail({ surah }) {
         <p className="text-3xl font-arabic mt-3 text-emerald-100">{surah.arabic}</p>
       </div>
 
+      <div className="flex bg-slate-800/90 p-1.5 rounded-2xl border border-slate-700 text-xs font-bold shadow-inner">
+        <button 
+          onClick={() => setLang('hinglish')}
+          className={`flex-1 py-2.5 rounded-xl transition duration-200 ${lang === 'hinglish' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-400 hover:text-white'}`}
+        >
+          Hinglish
+        </button>
+        <button 
+          onClick={() => setLang('english')}
+          className={`flex-1 py-2.5 rounded-xl transition duration-200 ${lang === 'english' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-400 hover:text-white'}`}
+        >
+          English
+        </button>
+        <button 
+          onClick={() => setLang('urdu')}
+          className={`flex-1 py-2.5 rounded-xl transition duration-200 ${lang === 'urdu' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-400 hover:text-white'}`}
+        >
+          اردو
+        </button>
+      </div>
+
       <div className="space-y-3">
         {loading ? (
           <div className="flex justify-center py-20 text-slate-400"><Loader2 className="animate-spin text-emerald-400" size={32} /></div>
@@ -285,14 +328,18 @@ function SurahDetail({ surah }) {
             <div key={v.id} className="bg-slate-800/80 p-4 rounded-2xl border border-slate-700 space-y-3">
               <span className="bg-emerald-500/15 text-emerald-400 text-xs px-3 py-1 rounded-full font-bold">Ayah {v.id}</span>
               <p className="text-right text-2xl font-arabic text-emerald-100 leading-loose">{v.arabic}</p>
-              <div className="pt-3 border-t border-slate-700 text-sm text-slate-300">{v.translation || v.hinglish}</div>
+              <div className={`pt-3 border-t border-slate-700 text-sm font-medium ${lang === 'urdu' ? 'text-right font-arabic text-emerald-200 text-base' : 'text-slate-300'}`}>
+                {lang === 'english' && (v.english || "English translation available after downloading.")}
+                {lang === 'urdu' && (v.urdu || "اردو ترجمہ دستیاب ہے۔")}
+                {lang === 'hinglish' && (v.hinglish || v.translation || "Hinglish translation available.")}
+              </div>
             </div>
           ))
         ) : (
           <div className="bg-slate-800/60 p-8 rounded-2xl text-center space-y-3">
             <BookOpen size={24} className="mx-auto text-emerald-400" />
             <h4 className="text-sm font-bold text-white">Download Required</h4>
-            <p className="text-xs text-slate-400">Please download the Quran from the Quran tab to read offline.</p>
+            <p className="text-xs text-slate-400">Please download the multi-language Quran from the Quran tab to read offline.</p>
           </div>
         )}
       </div>
