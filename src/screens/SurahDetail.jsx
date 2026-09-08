@@ -1,59 +1,90 @@
-import React, { useState } from 'react';
-import { Volume2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Volume2, Loader2, BookOpen } from 'lucide-react';
 
 export default function SurahDetail({ surah }) {
-  const [translationLang, setTranslationLang] = useState('hinglish');
+  const [verses, setVerses] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadVerses() {
+      setLoading(true);
+      try {
+        // Check if full quran is downloaded locally
+        const savedQuran = localStorage.getItem('full_quran_offline');
+        if (savedQuran) {
+          const quranData = JSON.parse(savedQuran);
+          const currentSurah = quranData.find(s => s.number === surah.no);
+          if (currentSurah && currentSurah.ayahs) {
+            const formatted = currentSurah.ayahs.map(a => ({
+              id: a.numberInSurah,
+              arabic: a.text, // Note: API text combines arabic, we can fallback to local data if available
+              translation: a.text
+            }));
+            // If local surah has fallback verses, merge them
+            const merged = formatted.map((f, idx) => ({
+              ...f,
+              arabic: surah.verses && surah.verses[idx] ? surah.verses[idx].arabic : f.arabic
+            }));
+            setVerses(merged);
+            setLoading(false);
+            return;
+          }
+        }
+
+        // Fallback to static bundled verses if not downloaded yet
+        if (surah.verses && surah.verses.length > 0) {
+          setVerses(surah.verses);
+        } else {
+          setVerses([]);
+        }
+      } catch (err) {
+        console.error("Error loading verses:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadVerses();
+  }, [surah]);
 
   return (
-    <div className="p-4 space-y-4">
-      <div className="bg-gradient-to-r from-emerald-800 to-teal-900 rounded-xl p-4 text-center text-white shadow-md">
-        <h2 className="text-xl font-bold">{surah.name}</h2>
-        <p className="text-xs text-emerald-200">{surah.meaning} • {surah.versesCount} Verses</p>
-        <p className="text-2xl font-arabic mt-2 text-emerald-300">{surah.arabic}</p>
-      </div>
-
-      <div className="flex bg-slate-800 p-1 rounded-xl border border-slate-700 text-xs font-medium">
-        <button 
-          onClick={() => setTranslationLang('hinglish')}
-          className={`flex-1 py-2 rounded-lg transition ${translationLang === 'hinglish' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-white'}`}
-        >
-          Hinglish
-        </button>
-        <button 
-          onClick={() => setTranslationLang('english')}
-          className={`flex-1 py-2 rounded-lg transition ${translationLang === 'english' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-white'}`}
-        >
-          English
-        </button>
-        <button 
-          onClick={() => setTranslationLang('urdu')}
-          className={`flex-1 py-2 rounded-lg transition ${translationLang === 'urdu' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-white'}`}
-        >
-          اردو (Urdu)
-        </button>
+    <div className="space-y-4 pb-4">
+      <div className="bg-gradient-to-r from-emerald-700 to-teal-800 rounded-3xl p-5 text-center text-white shadow-xl border border-emerald-500/20">
+        <h2 className="text-xl font-extrabold tracking-tight">{surah.name}</h2>
+        <p className="text-xs text-emerald-200 font-medium mt-1">{surah.meaning} • {surah.versesCount} Verses</p>
+        <p className="text-3xl font-arabic mt-3 text-emerald-100">{surah.arabic}</p>
       </div>
 
       <div className="space-y-3">
-        {surah.verses && surah.verses.length > 0 ? (
-          surah.verses.map((v) => (
-            <div key={v.id} className="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-3">
-              <div className="flex justify-between items-center text-xs text-emerald-400 font-semibold">
-                <span>Ayah {v.id}</span>
-                <Volume2 size={16} className="cursor-pointer text-slate-400 hover:text-white" />
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-20 space-y-3 text-slate-400">
+            <Loader2 className="animate-spin text-emerald-400" size={32} />
+            <p className="text-xs">Loading Verses...</p>
+          </div>
+        ) : verses.length > 0 ? (
+          verses.map((v) => (
+            <div key={v.id} className="bg-slate-800/80 p-4 rounded-2xl border border-slate-700/80 space-y-3 shadow-sm">
+              <div className="flex justify-between items-center text-xs text-emerald-400 font-bold">
+                <span className="bg-emerald-500/15 px-3 py-1 rounded-full border border-emerald-500/30">Ayah {v.id}</span>
+                <Volume2 size={16} className="cursor-pointer text-slate-400 hover:text-white transition" />
               </div>
-              <p className="text-right text-xl font-arabic text-emerald-100 leading-loose">
+              <p className="text-right text-2xl font-arabic text-emerald-100 leading-loose">
                 {v.arabic}
               </p>
-              <div className={`pt-2 border-t border-slate-700/60 text-sm ${translationLang === 'urdu' ? 'text-right font-arabic text-emerald-200' : 'text-slate-300'}`}>
-                {translationLang === 'english' && v.english}
-                {translationLang === 'hinglish' && v.hinglish}
-                {translationLang === 'urdu' && v.urdu}
+              <div className="pt-3 border-t border-slate-700/85 text-sm font-medium text-slate-300">
+                {v.translation}
               </div>
             </div>
           ))
         ) : (
-          <div className="text-center py-12 text-slate-400 text-xs">
-            Verses data for this Surah will be updated soon. (Al-Fatihah has full content demo).
+          <div className="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-8 text-center space-y-3 my-6">
+            <div className="w-12 h-12 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center mx-auto">
+              <BookOpen size={24} />
+            </div>
+            <h4 className="text-sm font-bold text-white">Download Required for Full Quran</h4>
+            <p className="text-xs text-slate-400 max-w-xs mx-auto leading-relaxed">
+              Please click the <span className="text-emerald-300 font-semibold">"Download"</span> button on the Quran tab to download all 114 Surahs for complete offline reading.
+            </p>
           </div>
         )}
       </div>
