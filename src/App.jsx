@@ -15,7 +15,7 @@ export default function App() {
         
         {/* Top Status Bar */}
         <div className="bg-[#0f172a]/90 backdrop-blur-md pt-3 pb-1 px-6 flex justify-between items-center text-xs font-semibold text-slate-400 shrink-0">
-          <span>02:14</span>
+          <span>02:18</span>
           <div className="w-20 h-4 bg-black rounded-full mx-auto absolute left-1/2 -translate-x-1/2 top-2"></div>
           <div className="flex items-center gap-1.5">
             <span className="text-[10px]">5G</span>
@@ -110,51 +110,87 @@ function NavItem({ icon, label, isActive, onClick }) {
   );
 }
 
-// 1. Home Screen with Dynamic Prayer Times & Live Clock
+// 1. Home Screen with Live Countdown & Hijri Calendar
 function HomeScreen({ setActiveTab, setCurrentTool }) {
   const [locationName, setLocationName] = useState("New Delhi, India");
   const [loadingLoc, setLoadingLoc] = useState(false);
   const [timeString, setTimeString] = useState('');
-  const [dateString, setDateString] = useState('');
-  const [currentPrayer, setCurrentPrayer] = useState({ name: 'Fajr', time: '04:32 AM' });
+  const [hijriDate, setHijriDate] = useState('Loading Hijri...');
+  const [nextPrayerInfo, setNextPrayerInfo] = useState({ name: 'Fajr', countdown: '00h 00m left' });
 
-  // Standard Prayer Times for Delhi Region (Approximate standard schedule)
-  const prayerTimes = [
-    { name: 'Fajr', time: '04:32 AM', hour: 4, min: 32 },
-    { name: 'Dhuhr', time: '12:34 PM', hour: 12, min: 34 },
-    { name: 'Asr', time: '04:50 PM', hour: 16, min: 50 },
-    { name: 'Maghrib', time: '06:48 PM', hour: 18, min: 48 },
-    { name: 'Isha', time: '08:08 PM', hour: 20, min: 8 },
+  // Prayer schedule (Hours & Minutes in 24h format for exact countdown calculation)
+  const prayers = [
+    { name: 'Fajr', h: 4, m: 32 },
+    { name: 'Dhuhr', h: 12, m: 34 },
+    { name: 'Asr', h: 16, m: 50 },
+    { name: 'Maghrib', h: 18, m: 48 },
+    { name: 'Isha', h: 20, m: 8 },
   ];
 
   useEffect(() => {
-    const updateClockAndPrayer = () => {
+    // Fetch Hijri Date using Aladhan API
+    async function fetchHijri() {
+      try {
+        const today = new Date();
+        const dd = String(today.getDate()).padStart(2, '0');
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const yyyy = today.getFullYear();
+        const res = await fetch(`https://api.aladhan.com/v1/gToH?date=${dd}-${mm}-${yyyy}`);
+        const data = await res.json();
+        if (data.code === 200) {
+          const h = data.data.hijri;
+          setHijriDate(`${h.day} ${h.month.en} ${h.year} AH`);
+        }
+      } catch (e) {
+        setHijriDate("27 Safar 1448 AH");
+      }
+    }
+    fetchHijri();
+
+    const updateTimer = () => {
       const now = new Date();
-      const currentHour = now.getHours();
-      const currentMin = now.getMinutes();
-      const totalCurrentMins = currentHour * 60 + currentMin;
+      const curH = now.getHours();
+      const curM = now.getMinutes();
+      const curS = now.getSeconds();
+      const totalCurSec = curH * 3600 + curM * 60 + curS;
 
       setTimeString(now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }));
-      setDateString(now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }));
 
-      // Automatically determine active/next prayer based on live time
-      let active = prayerTimes[4]; // Default to Isha if late night
-      for (let i = 0; i < prayerTimes.length; i++) {
-        const prayerMins = prayerTimes[i].hour * 60 + prayerTimes[i].min;
-        if (totalCurrentMins < prayerMins) {
-          active = prayerTimes[i === 0 ? 0 : i - 1];
+      // Find next prayer
+      let targetPrayer = prayers[0];
+      let found = false;
+
+      for (let p of prayers) {
+        const targetSec = p.h * 3600 + p.m * 60;
+        if (targetSec > totalCurSec) {
+          targetPrayer = p;
+          found = true;
           break;
         }
       }
-      // If past Isha, next is Fajr
-      if (totalCurrentMins >= (20 * 60 + 8)) {
-        active = { name: 'Fajr (Tomorrow)', time: '04:32 AM' };
+
+      // If all prayers passed today, next is Fajr tomorrow
+      let diffSec = 0;
+      if (!found) {
+        const tomorrowFajrSec = (24 * 3600) + (prayers[0].h * 3600 + prayers[0].m * 60);
+        diffSec = tomorrowFajrSec - totalCurSec;
+      } else {
+        const targetSec = targetPrayer.h * 3600 + targetPrayer.m * 60;
+        diffSec = targetSec - totalCurSec;
       }
-      setCurrentPrayer(active);
+
+      const hrs = Math.floor(diffSec / 3600);
+      const mins = Math.floor((diffSec % 3600) / 60);
+      const secs = diffSec % 60;
+
+      setNextPrayerInfo({
+        name: targetPrayer.name,
+        countdown: `${hrs}h ${mins}m ${secs}s left`
+      });
     };
 
-    updateClockAndPrayer();
-    const timer = setInterval(updateClockAndPrayer, 1000);
+    updateTimer();
+    const timer = setInterval(updateTimer, 1000);
     return () => clearInterval(timer);
   }, []);
 
@@ -196,31 +232,33 @@ function HomeScreen({ setActiveTab, setCurrentTool }) {
         </button>
       </div>
 
+      {/* Enhanced Prayer Card with Hijri Month & Live Countdown */}
       <div className="bg-gradient-to-br from-emerald-600 via-teal-700 to-emerald-900 rounded-3xl p-5 text-white shadow-xl shadow-emerald-950/40 relative overflow-hidden border border-emerald-400/20">
         <div className="absolute -right-6 -bottom-6 w-36 h-36 bg-white/10 rounded-full blur-3xl pointer-events-none"></div>
         <div className="relative z-10">
           <div className="flex justify-between items-center mb-3">
-            <div className="flex items-center gap-1.5 bg-emerald-950/50 backdrop-blur-md px-3 py-1 rounded-full border border-emerald-400/20 text-[11px] font-medium text-emerald-200">
-              <Calendar size={12} className="text-emerald-400" />
-              <span>{dateString || "Loading Date..."}</span>
+            <div className="flex items-center gap-1.5 bg-emerald-950/50 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-emerald-400/20 text-[11px] font-bold text-emerald-200 shadow-inner">
+              <Calendar size={13} className="text-emerald-400" />
+              <span>{hijriDate}</span>
             </div>
-            <span className="text-[10px] bg-white/10 px-2.5 py-1 rounded-full text-emerald-100 font-medium">Live Sync Active</span>
+            <span className="text-[10px] bg-white/10 px-2.5 py-1 rounded-full text-emerald-100 font-medium">Next: {nextPrayerInfo.name}</span>
           </div>
           
           <div className="text-center my-4 bg-black/10 backdrop-blur-sm py-4 rounded-2xl border border-white/10">
             <div className="flex items-center justify-center gap-1 text-xs text-emerald-200 font-medium tracking-wider uppercase mb-1">
-              <Clock size={13} /> Current Prayer: {currentPrayer.name}
+              <Clock size={13} /> Time Remaining
             </div>
-            <p className="text-3xl font-extrabold tracking-tight text-white">{timeString || "02:14:00 AM"}</p>
+            <p className="text-3xl font-extrabold tracking-tight text-white">{nextPrayerInfo.countdown}</p>
+            <p className="text-[11px] text-emerald-200 mt-1 font-semibold">Local Time: {timeString}</p>
           </div>
 
           <div className="grid grid-cols-5 gap-1.5 pt-1 text-center text-xs">
-            {prayerTimes.map((p, idx) => {
-              const isHighlight = currentPrayer.name.includes(p.name);
+            {prayers.map((p, idx) => {
+              const isNext = nextPrayerInfo.name.includes(p.name);
               return (
-                <div key={idx} className={`py-2 rounded-xl transition ${isHighlight ? 'bg-emerald-950/90 border border-emerald-400/50 shadow-inner' : 'bg-black/15 border border-white/5'}`}>
-                  <p className={`${isHighlight ? 'text-emerald-300 font-bold' : 'text-emerald-200'} text-[10px]`}>{p.name}</p>
-                  <p className={`font-bold text-[11px] mt-0.5 ${isHighlight ? 'text-white' : 'text-emerald-100'}`}>{p.time.replace(/ [AP]M/, '')}</p>
+                <div key={idx} className={`py-2 rounded-xl transition ${isNext ? 'bg-emerald-950/90 border border-emerald-400/50 shadow-inner' : 'bg-black/15 border border-white/5'}`}>
+                  <p className={`${isNext ? 'text-emerald-300 font-bold' : 'text-emerald-200'} text-[10px]`}>{p.name}</p>
+                  <p className={`font-bold text-[11px] mt-0.5 ${isNext ? 'text-white' : 'text-emerald-100'}`}>{p.time.replace(/ [AP]M/, '')}</p>
                 </div>
               );
             })}
