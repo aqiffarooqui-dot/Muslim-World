@@ -15,7 +15,7 @@ export default function App() {
         
         {/* Top Status Bar */}
         <div className="bg-[#0f172a]/90 backdrop-blur-md pt-3 pb-1 px-6 flex justify-between items-center text-xs font-semibold text-slate-400 shrink-0">
-          <span>02:11</span>
+          <span>02:14</span>
           <div className="w-20 h-4 bg-black rounded-full mx-auto absolute left-1/2 -translate-x-1/2 top-2"></div>
           <div className="flex items-center gap-1.5">
             <span className="text-[10px]">5G</span>
@@ -110,21 +110,51 @@ function NavItem({ icon, label, isActive, onClick }) {
   );
 }
 
-// 1. Home Screen with Real-Time Live Clock
+// 1. Home Screen with Dynamic Prayer Times & Live Clock
 function HomeScreen({ setActiveTab, setCurrentTool }) {
   const [locationName, setLocationName] = useState("New Delhi, India");
   const [loadingLoc, setLoadingLoc] = useState(false);
   const [timeString, setTimeString] = useState('');
   const [dateString, setDateString] = useState('');
+  const [currentPrayer, setCurrentPrayer] = useState({ name: 'Fajr', time: '04:32 AM' });
+
+  // Standard Prayer Times for Delhi Region (Approximate standard schedule)
+  const prayerTimes = [
+    { name: 'Fajr', time: '04:32 AM', hour: 4, min: 32 },
+    { name: 'Dhuhr', time: '12:34 PM', hour: 12, min: 34 },
+    { name: 'Asr', time: '04:50 PM', hour: 16, min: 50 },
+    { name: 'Maghrib', time: '06:48 PM', hour: 18, min: 48 },
+    { name: 'Isha', time: '08:08 PM', hour: 20, min: 8 },
+  ];
 
   useEffect(() => {
-    const updateClock = () => {
+    const updateClockAndPrayer = () => {
       const now = new Date();
+      const currentHour = now.getHours();
+      const currentMin = now.getMinutes();
+      const totalCurrentMins = currentHour * 60 + currentMin;
+
       setTimeString(now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }));
       setDateString(now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }));
+
+      // Automatically determine active/next prayer based on live time
+      let active = prayerTimes[4]; // Default to Isha if late night
+      for (let i = 0; i < prayerTimes.length; i++) {
+        const prayerMins = prayerTimes[i].hour * 60 + prayerTimes[i].min;
+        if (totalCurrentMins < prayerMins) {
+          active = prayerTimes[i === 0 ? 0 : i - 1];
+          break;
+        }
+      }
+      // If past Isha, next is Fajr
+      if (totalCurrentMins >= (20 * 60 + 8)) {
+        active = { name: 'Fajr (Tomorrow)', time: '04:32 AM' };
+      }
+      setCurrentPrayer(active);
     };
-    updateClock();
-    const timer = setInterval(updateClock, 1000);
+
+    updateClockAndPrayer();
+    const timer = setInterval(updateClockAndPrayer, 1000);
     return () => clearInterval(timer);
   }, []);
 
@@ -174,22 +204,26 @@ function HomeScreen({ setActiveTab, setCurrentTool }) {
               <Calendar size={12} className="text-emerald-400" />
               <span>{dateString || "Loading Date..."}</span>
             </div>
+            <span className="text-[10px] bg-white/10 px-2.5 py-1 rounded-full text-emerald-100 font-medium">Live Sync Active</span>
           </div>
           
           <div className="text-center my-4 bg-black/10 backdrop-blur-sm py-4 rounded-2xl border border-white/10">
             <div className="flex items-center justify-center gap-1 text-xs text-emerald-200 font-medium tracking-wider uppercase mb-1">
-              <Clock size={13} /> Live Local Time
+              <Clock size={13} /> Current Prayer: {currentPrayer.name}
             </div>
-            <p className="text-3xl font-extrabold tracking-tight text-white">{timeString || "00:00:00 AM"}</p>
-            <p className="text-[11px] text-emerald-200 mt-1 font-medium">Next: Asr in 01:25 hr</p>
+            <p className="text-3xl font-extrabold tracking-tight text-white">{timeString || "02:14:00 AM"}</p>
           </div>
 
           <div className="grid grid-cols-5 gap-1.5 pt-1 text-center text-xs">
-            <div className="bg-black/15 py-2 rounded-xl border border-white/5"><p className="text-emerald-200 text-[10px] font-medium">Fajr</p><p className="font-bold text-xs mt-0.5">04:32</p></div>
-            <div className="bg-emerald-950/80 py-2 rounded-xl border border-emerald-400/30 shadow-inner"><p className="text-emerald-300 text-[10px] font-bold">Dhuhr</p><p className="font-extrabold text-xs mt-0.5 text-white">12:34</p></div>
-            <div className="bg-black/15 py-2 rounded-xl border border-white/5"><p className="text-emerald-200 text-[10px] font-medium">Asr</p><p className="font-bold text-xs mt-0.5">04:50</p></div>
-            <div className="bg-black/15 py-2 rounded-xl border border-white/5"><p className="text-emerald-200 text-[10px] font-medium">Maghrib</p><p className="font-bold text-xs mt-0.5">06:48</p></div>
-            <div className="bg-black/15 py-2 rounded-xl border border-white/5"><p className="text-emerald-200 text-[10px] font-medium">Isha</p><p className="font-bold text-xs mt-0.5">08:08</p></div>
+            {prayerTimes.map((p, idx) => {
+              const isHighlight = currentPrayer.name.includes(p.name);
+              return (
+                <div key={idx} className={`py-2 rounded-xl transition ${isHighlight ? 'bg-emerald-950/90 border border-emerald-400/50 shadow-inner' : 'bg-black/15 border border-white/5'}`}>
+                  <p className={`${isHighlight ? 'text-emerald-300 font-bold' : 'text-emerald-200'} text-[10px]`}>{p.name}</p>
+                  <p className={`font-bold text-[11px] mt-0.5 ${isHighlight ? 'text-white' : 'text-emerald-100'}`}>{p.time.replace(/ [AP]M/, '')}</p>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
@@ -542,7 +576,7 @@ function NamesListView() {
       {namesList.map((item) => (
         <div key={item.no} className="bg-slate-800/80 p-3.5 rounded-2xl flex justify-between items-center border border-slate-700/70 shadow-sm">
           <div className="flex items-center gap-3.5">
-            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 font-bold flex items-center justify-center text-xs border border-emerald-500/20">{item.no}</div>
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-400 font-bold flex items-center justify-center text-sm border border-emerald-500/20">{item.no}</div>
             <div>
               <h4 className="text-sm font-bold text-white tracking-tight">{item.name}</h4>
               <p className="text-[11px] text-slate-400 font-medium">{item.meaning}</p>
