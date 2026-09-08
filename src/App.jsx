@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Home, BookOpen, Heart, Compass, Menu, Bell, Search, MapPin, ArrowLeft, ChevronRight, RotateCcw, Volume2, Calendar, Clock, Sparkles } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Home, BookOpen, Heart, Compass, Menu, Bell, Search, MapPin, ArrowLeft, ChevronRight, RotateCcw, Volume2, Calendar, Clock, Sparkles, Navigation, Download, CheckCircle, Loader2 } from 'lucide-react';
 import { surahsList } from './data/quranData';
 import { namesList } from './data/namesData';
 
@@ -13,9 +13,9 @@ export default function App() {
       {/* Authentic Mobile Device Frame Container */}
       <div className="w-full h-full sm:max-w-[410px] sm:h-[88vh] sm:rounded-[48px] sm:border-[10px] sm:border-slate-800 bg-[#0f172a] flex flex-col relative overflow-hidden shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)]">
         
-        {/* iOS Dynamic Island / Status Bar Spacer */}
+        {/* Top Status Bar */}
         <div className="bg-[#0f172a]/90 backdrop-blur-md pt-3 pb-1 px-6 flex justify-between items-center text-xs font-semibold text-slate-400 shrink-0">
-          <span>01:53</span>
+          <span>02:11</span>
           <div className="w-20 h-4 bg-black rounded-full mx-auto absolute left-1/2 -translate-x-1/2 top-2"></div>
           <div className="flex items-center gap-1.5">
             <span className="text-[10px]">5G</span>
@@ -110,26 +110,78 @@ function NavItem({ icon, label, isActive, onClick }) {
   );
 }
 
+// 1. Home Screen with Real-Time Live Clock
 function HomeScreen({ setActiveTab, setCurrentTool }) {
+  const [locationName, setLocationName] = useState("New Delhi, India");
+  const [loadingLoc, setLoadingLoc] = useState(false);
+  const [timeString, setTimeString] = useState('');
+  const [dateString, setDateString] = useState('');
+
+  useEffect(() => {
+    const updateClock = () => {
+      const now = new Date();
+      setTimeString(now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }));
+      setDateString(now.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }));
+    };
+    updateClock();
+    const timer = setInterval(updateClock, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const fetchUserLocation = () => {
+    if (!navigator.geolocation) return;
+    setLoadingLoc(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        try {
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+          const data = await res.json();
+          const city = data.address.city || data.address.town || data.address.state || "Current Location";
+          const country = data.address.country || "";
+          setLocationName(`${city}, ${country}`);
+        } catch (err) {
+          setLocationName(`Lat: ${latitude.toFixed(2)}, Lon: ${longitude.toFixed(2)}`);
+        } finally {
+          setLoadingLoc(false);
+        }
+      },
+      () => setLoadingLoc(false),
+      { timeout: 10000 }
+    );
+  };
+
   return (
     <div className="space-y-4 pb-4">
-      {/* Enhanced Prayer Card */}
+      <div className="flex justify-between items-center px-1">
+        <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-400">
+          <MapPin size={13} />
+          <span>{loadingLoc ? "Detecting location..." : locationName}</span>
+        </div>
+        <button 
+          onClick={fetchUserLocation}
+          className="bg-slate-800 hover:bg-slate-700 text-slate-300 px-2.5 py-1 rounded-xl text-[10px] font-bold flex items-center gap-1 transition border border-slate-700/60 active:scale-95"
+        >
+          <Navigation size={11} className="text-emerald-400" /> Detect GPS
+        </button>
+      </div>
+
       <div className="bg-gradient-to-br from-emerald-600 via-teal-700 to-emerald-900 rounded-3xl p-5 text-white shadow-xl shadow-emerald-950/40 relative overflow-hidden border border-emerald-400/20">
         <div className="absolute -right-6 -bottom-6 w-36 h-36 bg-white/10 rounded-full blur-3xl pointer-events-none"></div>
         <div className="relative z-10">
           <div className="flex justify-between items-center mb-3">
             <div className="flex items-center gap-1.5 bg-emerald-950/50 backdrop-blur-md px-3 py-1 rounded-full border border-emerald-400/20 text-[11px] font-medium text-emerald-200">
               <Calendar size={12} className="text-emerald-400" />
-              <span>18 Rabiul Awwal 1448 AH</span>
+              <span>{dateString || "Loading Date..."}</span>
             </div>
-            <span className="text-[11px] bg-white/10 px-2.5 py-1 rounded-full text-emerald-100 font-medium">Asr in 01:25 hr</span>
           </div>
           
           <div className="text-center my-4 bg-black/10 backdrop-blur-sm py-4 rounded-2xl border border-white/10">
             <div className="flex items-center justify-center gap-1 text-xs text-emerald-200 font-medium tracking-wider uppercase mb-1">
-              <Clock size={13} /> Dhuhr Time
+              <Clock size={13} /> Live Local Time
             </div>
-            <p className="text-4xl font-extrabold tracking-tight text-white">12:34 PM</p>
+            <p className="text-3xl font-extrabold tracking-tight text-white">{timeString || "00:00:00 AM"}</p>
+            <p className="text-[11px] text-emerald-200 mt-1 font-medium">Next: Asr in 01:25 hr</p>
           </div>
 
           <div className="grid grid-cols-5 gap-1.5 pt-1 text-center text-xs">
@@ -142,7 +194,6 @@ function HomeScreen({ setActiveTab, setCurrentTool }) {
         </div>
       </div>
 
-      {/* Ayah of the Day Card */}
       <div className="bg-slate-800/90 border border-slate-700/80 rounded-3xl p-5 shadow-lg backdrop-blur-xl relative overflow-hidden">
         <div className="flex justify-between items-center mb-3">
           <span className="text-xs font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
@@ -163,7 +214,6 @@ function HomeScreen({ setActiveTab, setCurrentTool }) {
         </div>
       </div>
 
-      {/* Quick Features Grid */}
       <div>
         <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 px-1">Quick Features</h3>
         <div className="grid grid-cols-4 gap-3 text-center">
@@ -186,21 +236,91 @@ function QuickFeatureItem({ icon, label }) {
   );
 }
 
+// 2. Quran Screen with Indo-Pak Script Auto-Download
 function QuranScreen({ setSelectedSurah }) {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [downloading, setDownloading] = useState(false);
+  const [isDownloaded, setIsDownloaded] = useState(false);
+
+  useEffect(() => {
+    if (localStorage.getItem('full_quran_indopak')) setIsDownloaded(true);
+  }, []);
+
+  const downloadFullQuran = async () => {
+    setDownloading(true);
+    try {
+      const res = await fetch('https://api.alquran.cloud/v1/quran/en.asad');
+      const arabicRes = await fetch('https://api.alquran.cloud/v1/quran/ar.indopak');
+      const data = await res.json();
+      const arabicData = await arabicRes.json();
+      
+      if (data.code === 200 && arabicData.code === 200) {
+        const mergedSurahs = data.data.surahs.map((surah, sIdx) => ({
+          ...surah,
+          ayahs: surah.ayahs.map((ayah, aIdx) => ({
+            ...ayah,
+            text: arabicData.data.surahs[sIdx].ayahs[aIdx].text,
+            translation: ayah.text
+          }))
+        }));
+        localStorage.setItem('full_quran_indopak', JSON.stringify(mergedSurahs));
+        setIsDownloaded(true);
+      }
+    } catch (err) {
+      alert("Please check your internet connection to download Quran.");
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  const filteredSurahs = surahsList.filter(surah => 
+    surah.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    surah.meaning.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    surah.no.toString().includes(searchQuery)
+  );
+
   return (
     <div className="space-y-3 pb-4">
+      {!isDownloaded ? (
+        <div className="bg-gradient-to-r from-emerald-800 to-teal-900 border border-emerald-600/40 rounded-2xl p-4 text-white shadow-md flex items-center justify-between">
+          <div className="space-y-0.5">
+            <h4 className="text-xs font-bold">Download Indo-Pak Quran (Offline)</h4>
+            <p className="text-[10px] text-emerald-200">Authentic South Asian Script (~3MB)</p>
+          </div>
+          <button 
+            onClick={downloadFullQuran}
+            disabled={downloading}
+            className="bg-white text-emerald-900 px-3.5 py-2 rounded-xl text-xs font-bold hover:bg-emerald-100 transition flex items-center gap-1.5 shadow"
+          >
+            {downloading ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
+            {downloading ? 'Downloading...' : 'Download'}
+          </button>
+        </div>
+      ) : (
+        <div className="bg-slate-800/90 border border-slate-700/80 rounded-2xl p-3 text-emerald-400 text-xs font-semibold flex items-center gap-2 shadow-sm">
+          <CheckCircle size={16} />
+          <span>Indo-Pak Quran script saved offline successfully!</span>
+        </div>
+      )}
+
       <div className="relative mb-2">
         <input 
           type="text" 
-          placeholder="Search Surah or Verse..." 
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Search Surah by name, meaning or number..." 
           className="w-full bg-slate-800/90 text-sm text-white px-4 py-3 pl-11 rounded-2xl border border-slate-700/80 focus:outline-none focus:border-emerald-500 shadow-inner transition"
         />
         <Search size={18} className="absolute left-3.5 top-3.5 text-slate-400" />
       </div>
 
-      <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider px-1">Surah List</h3>
+      <div className="flex justify-between items-center px-1">
+        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Surah List (114)</h3>
+        <span className="text-[10px] text-emerald-400 font-medium">Indo-Pak Script</span>
+      </div>
+
       <div className="space-y-2.5">
-        {surahsList.map((surah) => (
+        {filteredSurahs.map((surah) => (
           <div 
             key={surah.no} 
             onClick={() => setSelectedSurah(surah)}
@@ -225,8 +345,27 @@ function QuranScreen({ setSelectedSurah }) {
   );
 }
 
+// 3. Surah Detail View
 function SurahDetail({ surah }) {
-  const [translationLang, setTranslationLang] = useState('hinglish');
+  const [verses, setVerses] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const savedQuran = localStorage.getItem('full_quran_indopak');
+    if (savedQuran) {
+      const quranData = JSON.parse(savedQuran);
+      const currentSurah = quranData.find(s => s.number === surah.no);
+      if (currentSurah && currentSurah.ayahs) {
+        setVerses(currentSurah.ayahs.map(a => ({ id: a.numberInSurah, arabic: a.text, translation: a.translation })));
+        setLoading(false);
+        return;
+      }
+    }
+    if (surah.verses && surah.verses.length > 0) {
+      setVerses(surah.verses);
+    }
+    setLoading(false);
+  }, [surah]);
 
   return (
     <div className="space-y-4 pb-4">
@@ -236,48 +375,32 @@ function SurahDetail({ surah }) {
         <p className="text-3xl font-arabic mt-3 text-emerald-100">{surah.arabic}</p>
       </div>
 
-      <div className="flex bg-slate-800/90 p-1.5 rounded-2xl border border-slate-700 text-xs font-bold shadow-inner">
-        <button 
-          onClick={() => setTranslationLang('hinglish')}
-          className={`flex-1 py-2.5 rounded-xl transition duration-200 ${translationLang === 'hinglish' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-400 hover:text-white'}`}
-        >
-          Hinglish
-        </button>
-        <button 
-          onClick={() => setTranslationLang('english')}
-          className={`flex-1 py-2.5 rounded-xl transition duration-200 ${translationLang === 'english' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-400 hover:text-white'}`}
-        >
-          English
-        </button>
-        <button 
-          onClick={() => setTranslationLang('urdu')}
-          className={`flex-1 py-2.5 rounded-xl transition duration-200 ${translationLang === 'urdu' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-400 hover:text-white'}`}
-        >
-          اردو
-        </button>
-      </div>
-
       <div className="space-y-3">
-        {surah.verses && surah.verses.length > 0 ? (
-          surah.verses.map((v) => (
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-20 space-y-3 text-slate-400">
+            <Loader2 className="animate-spin text-emerald-400" size={32} />
+            <p className="text-xs">Loading Verses...</p>
+          </div>
+        ) : verses.length > 0 ? (
+          verses.map((v) => (
             <div key={v.id} className="bg-slate-800/80 p-4 rounded-2xl border border-slate-700/80 space-y-3 shadow-sm">
               <div className="flex justify-between items-center text-xs text-emerald-400 font-bold">
                 <span className="bg-emerald-500/15 px-3 py-1 rounded-full border border-emerald-500/30">Ayah {v.id}</span>
                 <Volume2 size={16} className="cursor-pointer text-slate-400 hover:text-white transition" />
               </div>
-              <p className="text-right text-2xl font-arabic text-emerald-100 leading-loose">
-                {v.arabic}
-              </p>
-              <div className={`pt-3 border-t border-slate-700/80 text-sm font-medium ${translationLang === 'urdu' ? 'text-right font-arabic text-emerald-200 text-base' : 'text-slate-300'}`}>
-                {translationLang === 'english' && v.english}
-                {translationLang === 'hinglish' && v.hinglish}
-                {translationLang === 'urdu' && v.urdu}
-              </div>
+              <p className="text-right text-2xl font-arabic text-emerald-100 leading-loose">{v.arabic}</p>
+              <div className="pt-3 border-t border-slate-700/85 text-sm font-medium text-slate-300">{v.translation || v.hinglish}</div>
             </div>
           ))
         ) : (
-          <div className="text-center py-12 text-slate-400 text-xs font-medium">
-            Verses data for this Surah will be updated soon. (Al-Fatihah has full content demo).
+          <div className="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-8 text-center space-y-3 my-6">
+            <div className="w-12 h-12 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center mx-auto">
+              <BookOpen size={24} />
+            </div>
+            <h4 className="text-sm font-bold text-white">Download Required for Offline Reading</h4>
+            <p className="text-xs text-slate-400 max-w-xs mx-auto leading-relaxed">
+              Please click the <span className="text-emerald-300 font-semibold">"Download"</span> button on the Quran tab to download all 114 Surahs in Indo-Pak script.
+            </p>
           </div>
         )}
       </div>
@@ -285,6 +408,7 @@ function SurahDetail({ surah }) {
   );
 }
 
+// 4. Dua Screen
 function DuaScreen() {
   return (
     <div className="space-y-3 pb-4">
@@ -313,6 +437,7 @@ function DuaCategoryCard({ title, count }) {
   );
 }
 
+// 5. Qibla Screen
 function QiblaScreen() {
   return (
     <div className="flex flex-col items-center justify-center py-6 text-center space-y-6">
@@ -331,6 +456,7 @@ function QiblaScreen() {
   );
 }
 
+// 6. More Screen
 function MoreScreen({ setCurrentTool }) {
   return (
     <div className="space-y-2.5 pb-4">
@@ -355,6 +481,7 @@ function MoreItem({ title, onClick }) {
   );
 }
 
+// 7. Tasbih View
 function TasbihView() {
   const [count, setCount] = useState(0);
   const [selectedZikr, setSelectedZikr] = useState("SubhanAllah");
@@ -407,6 +534,7 @@ function TasbihView() {
   );
 }
 
+// 8. 99 Names View
 function NamesListView() {
   return (
     <div className="space-y-2.5 pb-4">
