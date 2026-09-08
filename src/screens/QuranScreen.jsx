@@ -8,8 +8,7 @@ export default function QuranScreen({ setSelectedSurah }) {
   const [isDownloaded, setIsDownloaded] = useState(false);
 
   useEffect(() => {
-    // Check if full Quran is already downloaded in localStorage
-    const savedQuran = localStorage.getItem('full_quran_offline');
+    const savedQuran = localStorage.getItem('full_quran_indopak');
     if (savedQuran) {
       setIsDownloaded(true);
     }
@@ -18,17 +17,30 @@ export default function QuranScreen({ setSelectedSurah }) {
   const downloadFullQuran = async () => {
     setDownloading(true);
     try {
-      // Fetching all 114 surahs English translation from Al-Quran Cloud API
+      // Fetching complete Quran in Indo-Pak script & translation
       const res = await fetch('https://api.alquran.cloud/v1/quran/en.asad');
-      const data = await res.json();
+      const arabicRes = await fetch('https://api.alquran.cloud/v1/quran/ar.indopak');
       
-      if (data.code === 200) {
-        localStorage.setItem('full_quran_offline', JSON.stringify(data.data.surahs));
+      const data = await res.json();
+      const arabicData = await arabicRes.json();
+      
+      if (data.code === 200 && arabicData.code === 200) {
+        // Merge Indo-Pak arabic text into surahs
+        const mergedSurahs = data.data.surahs.map((surah, sIdx) => ({
+          ...surah,
+          ayahs: surah.ayahs.map((ayah, aIdx) => ({
+            ...ayah,
+            text: arabicData.data.surahs[sIdx].ayahs[aIdx].text,
+            translation: ayah.text
+          }))
+        }));
+
+        localStorage.setItem('full_quran_indopak', JSON.stringify(mergedSurahs));
         setIsDownloaded(true);
       }
     } catch (err) {
       console.error("Download failed:", err);
-      alert("Please check your internet connection to download Quran for offline use.");
+      alert("Please check your internet connection to download Quran.");
     } finally {
       setDownloading(false);
     }
@@ -42,12 +54,11 @@ export default function QuranScreen({ setSelectedSurah }) {
 
   return (
     <div className="space-y-3 pb-4">
-      {/* Offline Auto-Download Banner */}
       {!isDownloaded ? (
         <div className="bg-gradient-to-r from-emerald-800 to-teal-900 border border-emerald-600/40 rounded-2xl p-4 text-white shadow-md flex items-center justify-between">
           <div className="space-y-0.5">
-            <h4 className="text-xs font-bold">Download Full Quran (Offline)</h4>
-            <p className="text-[10px] text-emerald-200">Enable reading anywhere without internet (~3MB)</p>
+            <h4 className="text-xs font-bold">Download Indo-Pak Quran (Offline)</h4>
+            <p className="text-[10px] text-emerald-200">Authentic South Asian Script (~3MB)</p>
           </div>
           <button 
             onClick={downloadFullQuran}
@@ -61,7 +72,7 @@ export default function QuranScreen({ setSelectedSurah }) {
       ) : (
         <div className="bg-slate-800/90 border border-slate-700/80 rounded-2xl p-3 text-emerald-400 text-xs font-semibold flex items-center gap-2 shadow-sm">
           <CheckCircle size={16} />
-          <span>Full Quran is saved offline on your device!</span>
+          <span>Indo-Pak Quran script saved offline successfully!</span>
         </div>
       )}
 
@@ -78,7 +89,7 @@ export default function QuranScreen({ setSelectedSurah }) {
 
       <div className="flex justify-between items-center px-1">
         <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Surah List (114)</h3>
-        <span className="text-[10px] text-emerald-400 font-medium">Uthmani Script</span>
+        <span className="text-[10px] text-emerald-400 font-medium">Indo-Pak Script</span>
       </div>
 
       <div className="space-y-2.5">

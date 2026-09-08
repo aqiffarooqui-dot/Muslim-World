@@ -9,29 +9,22 @@ export default function SurahDetail({ surah }) {
     async function loadVerses() {
       setLoading(true);
       try {
-        // Check if full quran is downloaded locally
-        const savedQuran = localStorage.getItem('full_quran_offline');
+        const savedQuran = localStorage.getItem('full_quran_indopak');
         if (savedQuran) {
           const quranData = JSON.parse(savedQuran);
           const currentSurah = quranData.find(s => s.number === surah.no);
           if (currentSurah && currentSurah.ayahs) {
             const formatted = currentSurah.ayahs.map(a => ({
               id: a.numberInSurah,
-              arabic: a.text, // Note: API text combines arabic, we can fallback to local data if available
-              translation: a.text
+              arabic: a.text,
+              translation: a.translation
             }));
-            // If local surah has fallback verses, merge them
-            const merged = formatted.map((f, idx) => ({
-              ...f,
-              arabic: surah.verses && surah.verses[idx] ? surah.verses[idx].arabic : f.arabic
-            }));
-            setVerses(merged);
+            setVerses(formatted);
             setLoading(false);
             return;
           }
         }
 
-        // Fallback to static bundled verses if not downloaded yet
         if (surah.verses && surah.verses.length > 0) {
           setVerses(surah.verses);
         } else {
@@ -59,7 +52,7 @@ export default function SurahDetail({ surah }) {
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20 space-y-3 text-slate-400">
             <Loader2 className="animate-spin text-emerald-400" size={32} />
-            <p className="text-xs">Loading Verses...</p>
+            <p className="text-xs">Loading Indo-Pak Verses...</p>
           </div>
         ) : verses.length > 0 ? (
           verses.map((v) => (
@@ -68,6 +61,7 @@ export default function SurahDetail({ surah }) {
                 <span className="bg-emerald-500/15 px-3 py-1 rounded-full border border-emerald-500/30">Ayah {v.id}</span>
                 <Volume2 size={16} className="cursor-pointer text-slate-400 hover:text-white transition" />
               </div>
+              {/* Indo-Pak Arabic Text Rendering */}
               <p className="text-right text-2xl font-arabic text-emerald-100 leading-loose">
                 {v.arabic}
               </p>
@@ -81,9 +75,9 @@ export default function SurahDetail({ surah }) {
             <div className="w-12 h-12 bg-emerald-500/10 text-emerald-400 rounded-full flex items-center justify-center mx-auto">
               <BookOpen size={24} />
             </div>
-            <h4 className="text-sm font-bold text-white">Download Required for Full Quran</h4>
+            <h4 className="text-sm font-bold text-white">Download Required for Indo-Pak Quran</h4>
             <p className="text-xs text-slate-400 max-w-xs mx-auto leading-relaxed">
-              Please click the <span className="text-emerald-300 font-semibold">"Download"</span> button on the Quran tab to download all 114 Surahs for complete offline reading.
+              Please click the <span className="text-emerald-300 font-semibold">"Download"</span> button on the Quran tab to download all 114 Surahs in Indo-Pak script.
             </p>
           </div>
         )}
