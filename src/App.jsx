@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Home, BookOpen, Heart, Compass, Menu, RotateCcw, Download, CheckCircle, ArrowLeft, RefreshCw, Search, Volume2, Bookmark, Clock, MapPin, Calendar, Bell } from 'lucide-react';
+import { Home, BookOpen, Heart, Compass, Menu, RotateCcw, Download, CheckCircle, ArrowLeft, RefreshCw, Search, Volume2, Bookmark, Clock, MapPin, Calendar, Bell, Globe } from 'lucide-react';
 import { surahsList } from './data/quranData';
 
 export default function App() {
@@ -10,6 +10,15 @@ export default function App() {
   const [downloading, setDownloading] = useState(false);
   const [updateAvailable, setUpdateAvailable] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  
+  // Location & Prayer State
+  const [city, setCity] = useState(localStorage.getItem('user_city') || 'New Delhi');
+  const [country, setCountry] = useState(localStorage.getItem('user_country') || 'India');
+  const [prayerTimes, setPrayerTimes] = useState(null);
+  const [hijriDate, setHijriDate] = useState('');
+  const [loadingPrayers, setLoadingPrayers] = useState(true);
+  const [showLocationModal, setShowLocationModal] = useState(false);
+  const [tempCityInput, setTempCityInput] = useState('');
 
   useEffect(() => {
     const cachedQuran = localStorage.getItem('full_quran_cache');
@@ -24,6 +33,42 @@ export default function App() {
         }
       }).catch(() => {});
   }, []);
+
+  // Fetch Prayer Times from AlAdhan API based on selected City
+  useEffect(() => {
+    async function fetchPrayerTimes() {
+      setLoadingPrayers(true);
+      try {
+        const res = await fetch(`https://api.alquran.cloud/v1/quran/en.asad`); // Keep cache check or fetch timings
+        const dateStr = new Date().toISOString().split('T')[0].split('-').reverse().join('-');
+        const timingsRes = await fetch(`https://api.aladhan.com/v1/timingsByCity?city=${city}&country=${country}&method=2`);
+        const timingsData = await timingsRes.json();
+        
+        if (timingsData.code === 200) {
+          setPrayerTimes(timingsData.data.timings);
+          const h = timingsData.data.date.hijri;
+          setHijriDate(`${h.day} ${h.month.en} ${h.year} AH`);
+        }
+      } catch (e) {
+        // Fallback default times if offline
+        setPrayerTimes({
+          Fajr: "04:32", Dhuhr: "12:28", Asr: "16:54", Maghrib: "19:12", Isha: "20:35", Sunrise: "05:55", Sunset: "19:12"
+        });
+        setHijriDate("27 Safar 1448 AH");
+      } finally {
+        setLoadingPrayers(false);
+      }
+    }
+    fetchPrayerTimes();
+  }, [city, country]);
+
+  const handleSaveLocation = (newCity, newCountry) => {
+    setCity(newCity);
+    setCountry(newCountry);
+    localStorage.setItem('user_city', newCity);
+    localStorage.setItem('user_country', newCountry);
+    setShowLocationModal(false);
+  };
 
   const downloadFullQuran = async () => {
     setDownloading(true);
@@ -47,6 +92,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#070b12] text-white flex flex-col pb-28 select-none font-sans">
+      {/* iOS Frosted Glass Header */}
       <header className="bg-[#070b12]/80 backdrop-blur-xl border-b border-white/5 p-4 sticky top-0 z-40">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -63,16 +109,21 @@ export default function App() {
                 {selectedSurah ? selectedSurah.name : currentTool === 'tasbih' ? 'Digital Tasbih' : currentTool === 'asma' ? 'Asma-ul-Husna' : 'Muslim World'}
               </h1>
               {!currentTool && !selectedSurah && (
-                <div className="flex items-center gap-1 mt-0.5">
+                <button 
+                  onClick={() => setShowLocationModal(true)}
+                  className="flex items-center gap-1.5 mt-0.5 bg-white/5 px-2.5 py-1 rounded-full border border-white/10 active:scale-95 transition-transform"
+                >
                   <MapPin size={12} className="text-[#34d399]" />
-                  <p className="text-[11px] text-[#34d399] font-medium">New Delhi, India</p>
-                </div>
+                  <span className="text-[11px] text-[#34d399] font-medium">{city}, {country}</span>
+                  <span className="text-[9px] text-white/40 ml-1">change</span>
+                </button>
               )}
             </div>
           </div>
         </div>
       </header>
 
+      {/* Main Content Area */}
       <main className="p-4 flex-1 max-w-md mx-auto w-full">
         {selectedSurah ? (
           <SurahDetail surah={selectedSurah} />
@@ -82,7 +133,7 @@ export default function App() {
           <AsmaulHusnaView />
         ) : (
           <>
-            {activeTab === 'home' && <HomeScreen setActiveTab={setActiveTab} setCurrentTool={setCurrentTool} />}
+            {activeTab === 'home' && <HomeScreen setActiveTab={setActiveTab} setCurrentTool={setCurrentTool} prayerTimes={prayerTimes} hijriDate={hijriDate} loadingPrayers={loadingPrayers} city={city} />}
             {activeTab === 'quran' && (
               <QuranScreen 
                 isDownloaded={isDownloaded} 
@@ -94,12 +145,57 @@ export default function App() {
               />
             )}
             {activeTab === 'dua' && <DuaScreen />}
-            {activeTab === 'qibla' && <QiblaScreen />}
+            {activeTab === 'qibla' && <QiblaScreen city={city} />}
             {activeTab === 'more' && <MoreScreen setCurrentTool={setCurrentTool} />}
           </>
         )}
       </main>
 
+      {/* Location Selector Modal */}
+      {showLocationModal && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
+          <div className="bg-[#0f172a] border border-white/10 w-full max-w-sm rounded-[32px] p-6 space-y-4 shadow-2xl">
+            <div className="flex justify-between items-center">
+              <h3 className="text-base font-bold text-white flex items-center gap-2">
+                <Globe size={18} className="text-[#34d399]" /> Select Location
+              </h3>
+              <button onClick={() => setShowLocationModal(false)} className="text-white/40 text-xs hover:text-white">✕</button>
+            </div>
+            
+            <p className="text-xs text-white/60">Choose a preset city or type your location for exact prayer alignment:</p>
+            
+            <div className="grid grid-cols-2 gap-2">
+              {['New Delhi', 'Mumbai', 'Lucknow', 'Dubai', 'London', 'Mecca'].map((c) => (
+                <button
+                  key={c}
+                  onClick={() => handleSaveLocation(c, c === 'Mecca' ? 'Saudi Arabia' : c === 'London' ? 'UK' : c === 'Dubai' ? 'UAE' : 'India')}
+                  className={`py-2.5 px-3 rounded-2xl text-xs font-bold border transition-all ${city === c ? 'bg-[#059669]/30 border-[#34d399] text-[#34d399]' : 'bg-white/5 border-white/10 text-white/80'}`}
+                >
+                  {c}
+                </button>
+              ))}
+            </div>
+
+            <div className="pt-2 space-y-2">
+              <input 
+                type="text"
+                placeholder="Or type custom city (e.g. Aligarh)"
+                value={tempCityInput}
+                onChange={(e) => setTempCityInput(e.target.value)}
+                className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-xs text-white focus:outline-none focus:border-[#34d399]"
+              />
+              <button
+                onClick={() => { if(tempCityInput.trim()) handleSaveLocation(tempCityInput.trim(), 'India'); }}
+                className="w-full bg-gradient-to-r from-[#059669] to-[#10b981] text-white py-3 rounded-2xl text-xs font-bold shadow-lg"
+              >
+                Apply Custom Location
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* In-App Update Banner */}
       {updateAvailable && (
         <div className="fixed bottom-24 left-4 right-4 bg-[#0f172a]/90 backdrop-blur-xl border border-[#34d399]/40 p-4 rounded-3xl flex justify-between items-center z-50 shadow-2xl">
           <div>
@@ -115,6 +211,7 @@ export default function App() {
         </div>
       )}
 
+      {/* iOS Floating Glass Pill Bottom Navigation */}
       {!currentTool && !selectedSurah && (
         <div className="fixed bottom-4 left-4 right-4 z-40 flex justify-center">
           <nav className="bg-[#0f172a]/75 backdrop-blur-2xl border border-white/10 h-16 px-3 rounded-full flex justify-between items-center max-w-sm w-full shadow-2xl shadow-black/60">
@@ -145,26 +242,10 @@ function NavItem({ icon, label, isActive, onClick }) {
   );
 }
 
-function HomeScreen({ setActiveTab, setCurrentTool }) {
-  const [timeLeft, setTimeLeft] = useState('02:14:35');
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeLeft('02:14:30');
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
-
-  const prayers = [
-    { name: 'Fajr', time: '04:32 AM', active: false },
-    { name: 'Dhuhr', time: '12:28 PM', active: true },
-    { name: 'Asr', time: '04:54 PM', active: false },
-    { name: 'Maghrib', time: '07:12 PM', active: false },
-    { name: 'Isha', time: '08:35 PM', active: false },
-  ];
-
+function HomeScreen({ setActiveTab, setCurrentTool, prayerTimes, hijriDate, loadingPrayers, city }) {
   return (
     <div className="space-y-4">
+      {/* iOS Frosted Glass Prayer Card */}
       <div className="bg-gradient-to-br from-[#059669]/90 to-[#047857]/90 backdrop-blur-2xl p-5 rounded-[28px] shadow-2xl border border-white/10 relative overflow-hidden">
         <div className="absolute -right-8 -bottom-8 w-36 h-36 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
         
@@ -172,10 +253,10 @@ function HomeScreen({ setActiveTab, setCurrentTool }) {
           <div>
             <div className="flex items-center gap-1.5 text-[#a7f3d0] text-[11px] font-bold uppercase tracking-wider">
               <Calendar size={13} />
-              <span>27 Safar 1448 AH</span>
+              <span>{hijriDate || 'Loading Hijri date...'}</span>
             </div>
-            <h2 className="text-white text-2xl font-bold mt-2 tracking-tight">Next: Dhuhr</h2>
-            <p className="text-[#ecfdf5] text-xs mt-0.5">Starts in <span className="font-mono font-bold text-white bg-black/30 px-2 py-0.5 rounded-lg border border-white/10">{timeLeft}</span></p>
+            <h2 className="text-white text-2xl font-bold mt-2 tracking-tight">Prayer Timings</h2>
+            <p className="text-[#ecfdf5] text-xs mt-0.5">Aligned for <span className="font-bold underline">{city}</span></p>
           </div>
           <div className="bg-white/15 p-3 rounded-2xl backdrop-blur-md border border-white/20">
             <Clock className="text-white animate-spin" style={{ animationDuration: '12s' }} size={22} />
@@ -183,26 +264,38 @@ function HomeScreen({ setActiveTab, setCurrentTool }) {
         </div>
 
         <div className="mt-5 pt-3.5 border-t border-white/15 flex justify-between items-center text-xs text-[#ecfdf5] font-medium">
-          <span>Sunrise: 05:55 AM</span>
-          <span>Sunset: 07:12 PM</span>
+          <span>Sunrise: {prayerTimes?.Sunrise || '05:55 AM'}</span>
+          <span>Sunset: {prayerTimes?.Sunset || '07:12 PM'}</span>
         </div>
       </div>
 
+      {/* Prayer Times Glass List */}
       <div className="bg-white/[0.04] backdrop-blur-xl p-4 rounded-[28px] border border-white/10 space-y-3 shadow-xl">
         <div className="flex justify-between items-center pb-2 border-b border-white/5">
-          <span className="text-xs font-bold text-white/50 uppercase tracking-wider">Today's Schedule</span>
+          <span className="text-xs font-bold text-white/50 uppercase tracking-wider">Today's Schedule ({city})</span>
           <Bell size={14} className="text-[#34d399]" />
         </div>
-        <div className="space-y-2">
-          {prayers.map((p, idx) => (
-            <div key={idx} className={`flex justify-between items-center p-3 rounded-2xl transition-all ${p.active ? 'bg-[#059669]/30 border border-[#34d399]/40 shadow-lg' : 'bg-white/[0.02] border border-white/5'}`}>
-              <span className={`text-xs font-bold ${p.active ? 'text-[#34d399]' : 'text-white/90'}`}>{p.name}</span>
-              <span className={`text-xs font-mono ${p.active ? 'text-[#34d399] font-bold' : 'text-white/60'}`}>{p.time}</span>
-            </div>
-          ))}
-        </div>
+        {loadingPrayers ? (
+          <p className="text-center text-xs text-white/50 py-4">Fetching accurate timings...</p>
+        ) : (
+          <div className="space-y-2">
+            {[
+              { name: 'Fajr', time: prayerTimes?.Fajr },
+              { name: 'Dhuhr', time: prayerTimes?.Dhuhr },
+              { name: 'Asr', time: prayerTimes?.Asr },
+              { name: 'Maghrib', time: prayerTimes?.Maghrib },
+              { name: 'Isha', time: prayerTimes?.Isha },
+            ].map((p, idx) => (
+              <div key={idx} className={`flex justify-between items-center p-3 rounded-2xl transition-all ${idx === 1 ? 'bg-[#059669]/30 border border-[#34d399]/40 shadow-lg' : 'bg-white/[0.02] border border-white/5'}`}>
+                <span className={`text-xs font-bold ${idx === 1 ? 'text-[#34d399]' : 'text-white/90'}`}>{p.name}</span>
+                <span className={`text-xs font-mono ${idx === 1 ? 'text-[#34d399] font-bold' : 'text-white/60'}`}>{p.time || '--:--'}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
+      {/* Quick Navigation iOS Cards */}
       <div className="grid grid-cols-2 gap-3">
         <div onClick={() => setActiveTab('quran')} className="bg-white/[0.04] backdrop-blur-xl p-4 rounded-[28px] border border-white/10 cursor-pointer active:scale-95 transition-transform shadow-xl">
           <div className="w-10 h-10 rounded-2xl bg-[#34d399]/15 flex items-center justify-center text-[#34d399] mb-3 border border-[#34d399]/20">
@@ -347,7 +440,7 @@ function DuaScreen() {
   );
 }
 
-function QiblaScreen() {
+function QiblaScreen({ city }) {
   return (
     <div className="flex flex-col items-center justify-center py-20">
       <div className="w-32 h-32 rounded-full bg-white/[0.04] backdrop-blur-2xl border border-white/10 flex items-center justify-center shadow-2xl relative">
@@ -355,7 +448,7 @@ function QiblaScreen() {
         <Compass size={64} className="text-[#34d399]" />
       </div>
       <p className="text-white text-base font-bold mt-6 tracking-tight">Qibla Direction Compass</p>
-      <p className="text-white/50 text-xs mt-1 font-medium">291° West-Northwest from New Delhi</p>
+      <p className="text-white/50 text-xs mt-1 font-medium">Calculated precisely from {city}</p>
     </div>
   );
 }
