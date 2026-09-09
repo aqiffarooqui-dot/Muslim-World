@@ -174,6 +174,55 @@ export default function App() {
     window.location.reload();
   };
 
+  // Helper for parsing time
+  const parseTimeToMinutes = (timeStr) => {
+    if (!timeStr) return 0;
+    const parts = timeStr.split(' ');
+    if (parts.length < 2) return 0;
+    const [time, modifier] = parts;
+    let [hours, minutes] = time.split(':').map(Number);
+    if (modifier === 'PM' && hours < 12) hours += 12;
+    if (modifier === 'AM' && hours === 12) hours = 0;
+    return hours * 60 + minutes;
+  };
+
+  const currentMinutes = currentTime.getHours() * 60 + currentTime.getMinutes();
+
+  let activePrayer = 'Dhuhr';
+  let dosText = "Engage in Dhikr, Quran recitation, and daily lawful work.";
+  let dontsText = "Avoid wasting time in idle talk or missing prayer slots.";
+
+  if (prayerTimes) {
+    const fajrMin = parseTimeToMinutes(prayerTimes.Fajr);
+    const dhuhrMin = parseTimeToMinutes(prayerTimes.Dhuhr);
+    const asrMin = parseTimeToMinutes(prayerTimes.Asr);
+    const maghribMin = parseTimeToMinutes(prayerTimes.Maghrib);
+    const ishaMin = parseTimeToMinutes(prayerTimes.Isha);
+    const zawaalMin = parseTimeToMinutes(prayerTimes.Zawaal);
+
+    if (currentMinutes >= fajrMin - 30 && currentMinutes < fajrMin) {
+      activePrayer = 'Sehri / Fajr Prep';
+      dosText = "Finish Sehri before Fajr; make Niyyah for fasting.";
+      dontsText = "Do not eat or drink after Fajr timing starts.";
+    } else if (currentMinutes >= fajrMin && currentMinutes < fajrMin + 90) {
+      activePrayer = 'Fajr';
+      dosText = "Offer 2 Rakat Sunnah & 2 Fardh; recite Morning Azkar.";
+      dontsText = "Do not sleep immediately after Fajr until sunrise.";
+    } else if (currentMinutes >= zawaalMin - 15 && currentMinutes <= zawaalMin + 15) {
+      activePrayer = 'Zawaal';
+      dosText = "Engage in quiet reflection, istighfar, and dhikr.";
+      dontsText = "Strictly do NOT offer any Nafl or Qaza prayers during Zawaal.";
+    } else if (currentMinutes >= maghribMin && currentMinutes < maghribMin + 45) {
+      activePrayer = 'Maghrib & Iftar';
+      dosText = "Break fast immediately with dates/water; make Dua.";
+      dontsText = "Do not delay offering Maghrib prayer.";
+    } else if (currentMinutes >= ishaMin) {
+      activePrayer = 'Isha & Tahajjud';
+      dosText = "Offer Isha, Witr, and prepare to rest for Tahajjud.";
+      dontsText = "Avoid late night screen time.";
+    }
+  }
+
   return (
     <div className={`min-h-screen ${isDarkMode ? 'bg-[#05080f] text-white' : 'bg-[#f1f5f9] text-slate-900'} flex flex-col pb-28 select-none font-sans relative overflow-hidden transition-colors duration-500`}>
       
@@ -181,8 +230,9 @@ export default function App() {
         <span className="text-[35vw] font-serif whitespace-nowrap select-none">بِسْمِ اللَّهِ</span>
       </div>
 
-      <header className={`${isDarkMode ? 'bg-[#070b12]/60 border-white/10' : 'bg-white/60 border-slate-200/60'} backdrop-blur-2xl border-b p-4 sticky top-0 z-40 transition-colors shadow-lg`}>
-        <div className="flex items-center justify-between">
+      {/* 🌟 Fixed Header with Live Animated Guidance Ticker */}
+      <header className={`${isDarkMode ? 'bg-[#070b12]/80 border-white/10' : 'bg-white/80 border-slate-200/80'} backdrop-blur-2xl border-b sticky top-0 z-40 transition-colors shadow-xl`}>
+        <div className="p-3.5 flex items-center justify-between border-b border-white/5">
           <div className="flex items-center gap-3">
             {(currentTool || selectedSurah) && (
               <button 
@@ -199,11 +249,10 @@ export default function App() {
               {!currentTool && !selectedSurah && (
                 <button 
                   onClick={() => setShowLocationModal(true)}
-                  className={`flex items-center gap-1.5 mt-0.5 ${isDarkMode ? 'bg-white/10 border-white/15 text-[#34d399]' : 'bg-white border-slate-200 text-emerald-700'} px-3 py-1 rounded-full border backdrop-blur-xl active:scale-95 transition-transform shadow-sm`}
+                  className={`flex items-center gap-1.5 mt-0.5 ${isDarkMode ? 'bg-white/10 border-white/15 text-[#34d399]' : 'bg-white border-slate-200 text-emerald-700'} px-3 py-0.5 rounded-full border backdrop-blur-xl active:scale-95 transition-transform shadow-sm`}
                 >
-                  <MapPin size={12} />
-                  <span className="text-[11px] font-medium">{city}</span>
-                  <span className={`text-[9px] ${isDarkMode ? 'text-white/40' : 'text-slate-400'} ml-1`}>change</span>
+                  <MapPin size={11} />
+                  <span className="text-[10px] font-medium">{city}</span>
                 </button>
               )}
             </div>
@@ -211,11 +260,35 @@ export default function App() {
 
           <button 
             onClick={() => setIsDarkMode(!isDarkMode)}
-            className={`w-10 h-10 rounded-2xl ${isDarkMode ? 'bg-white/10 text-amber-400 border-white/15' : 'bg-white text-slate-700 border-slate-200'} backdrop-blur-xl border flex items-center justify-center shadow-lg active:scale-90 transition-transform`}
+            className={`w-9 h-9 rounded-2xl ${isDarkMode ? 'bg-white/10 text-amber-400 border-white/15' : 'bg-white text-slate-700 border-slate-200'} backdrop-blur-xl border flex items-center justify-center shadow-lg active:scale-90 transition-transform`}
           >
-            {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
+            {isDarkMode ? <Sun size={16} /> : <Moon size={16} />}
           </button>
         </div>
+
+        {/* Live Animated Guidance Inside Header */}
+        {!currentTool && !selectedSurah && (
+          <div className="bg-gradient-to-r from-[#065f46] via-[#047857] to-[#0f172a] px-4 py-2 text-white flex flex-col gap-1 border-t border-white/10">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[#a7f3d0] flex items-center gap-1 animate-pulse">
+                <Sparkles size={11} /> Live Guidance ({activePrayer})
+              </span>
+              <span className="text-[9px] font-mono bg-black/30 px-2 py-0.5 rounded-full text-white/90">
+                {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}
+              </span>
+            </div>
+            <div className="grid grid-cols-2 gap-2 text-[10px] pb-0.5">
+              <div className="flex items-start gap-1">
+                <CheckCircle2 size={12} className="text-[#34d399] shrink-0 mt-0.5" />
+                <span className="leading-tight text-white/90 truncate">{dosText}</span>
+              </div>
+              <div className="flex items-start gap-1">
+                <XCircle size={12} className="text-rose-400 shrink-0 mt-0.5" />
+                <span className="leading-tight text-white/90 truncate">{dontsText}</span>
+              </div>
+            </div>
+          </div>
+        )}
       </header>
 
       <main className="p-4 flex-1 max-w-md mx-auto w-full z-10 relative">
@@ -227,7 +300,7 @@ export default function App() {
           <AsmaulHusnaView isDarkMode={isDarkMode} />
         ) : (
           <>
-            {activeTab === 'home' && <HomeScreen setActiveTab={setActiveTab} setCurrentTool={setCurrentTool} prayerTimes={prayerTimes} hijriDate={hijriDate} loadingPrayers={loadingPrayers} city={city} isDarkMode={isDarkMode} currentTime={currentTime} />}
+            {activeTab === 'home' && <HomeScreen setActiveTab={setActiveTab} setCurrentTool={setCurrentTool} prayerTimes={prayerTimes} hijriDate={hijriDate} loadingPrayers={loadingPrayers} city={city} isDarkMode={isDarkMode} currentTime={currentTime} activePrayer={activePrayer} />}
             {activeTab === 'quran' && (
               <QuranScreen 
                 isDownloaded={isDownloaded} 
@@ -326,80 +399,10 @@ function NavItem({ icon, label, isActive, onClick, isDarkMode }) {
   );
 }
 
-function HomeScreen({ setActiveTab, setCurrentTool, prayerTimes, hijriDate, loadingPrayers, city, isDarkMode, currentTime }) {
-  
-  const parseTimeToMinutes = (timeStr) => {
-    if (!timeStr) return 0;
-    const parts = timeStr.split(' ');
-    if (parts.length < 2) return 0;
-    const [time, modifier] = parts;
-    let [hours, minutes] = time.split(':').map(Number);
-    if (modifier === 'PM' && hours < 12) hours += 12;
-    if (modifier === 'AM' && hours === 12) hours = 0;
-    return hours * 60 + minutes;
-  };
-
-  const currentMinutes = currentTime.getHours() * 60 + currentTime.getMinutes();
-
-  let activePrayer = 'Dhuhr';
-  let dosText = "Engage in Dhikr, Quran recitation, and daily lawful work.";
-  let dontsText = "Avoid wasting time in idle talk or missing prayer slots.";
-
-  if (prayerTimes) {
-    const fajrMin = parseTimeToMinutes(prayerTimes.Fajr);
-    const dhuhrMin = parseTimeToMinutes(prayerTimes.Dhuhr);
-    const asrMin = parseTimeToMinutes(prayerTimes.Asr);
-    const maghribMin = parseTimeToMinutes(prayerTimes.Maghrib);
-    const ishaMin = parseTimeToMinutes(prayerTimes.Isha);
-    const zawaalMin = parseTimeToMinutes(prayerTimes.Zawaal);
-
-    if (currentMinutes >= fajrMin - 30 && currentMinutes < fajrMin) {
-      activePrayer = 'Sehri / Fajr Prep';
-      dosText = "Finish Sehri before Fajr; make Niyyah for fasting.";
-      dontsText = "Do not eat or drink after Fajr timing starts.";
-    } else if (currentMinutes >= fajrMin && currentMinutes < fajrMin + 90) {
-      activePrayer = 'Fajr';
-      dosText = "Offer 2 Rakat Sunnah & 2 Rakat Fardh; recite Morning Azkar.";
-      dontsText = "Do not sleep immediately after Fajr until sunrise.";
-    } else if (currentMinutes >= zawaalMin - 15 && currentMinutes <= zawaalMin + 15) {
-      activePrayer = 'Zawaal';
-      dosText = "Engage in quiet reflection, istighfar, and dhikr.";
-      dontsText = "Strictly do NOT offer any Nafl or Qaza prayers during Zawaal.";
-    } else if (currentMinutes >= maghribMin && currentMinutes < maghribMin + 45) {
-      activePrayer = 'Maghrib & Iftar';
-      dosText = "Break your fast immediately with dates/water; make Dua during Iftar.";
-      dontsText = "Do not delay offering Maghrib prayer after breaking fast.";
-    } else if (currentMinutes >= ishaMin) {
-      activePrayer = 'Isha & Tahajjud';
-      dosText = "Offer Isha, Witr, and prepare to rest for late night Tahajjud.";
-      dontsText = "Avoid late night screen time that causes you to miss Fajr.";
-    }
-  }
-
+function HomeScreen({ setActiveTab, setCurrentTool, prayerTimes, hijriDate, loadingPrayers, city, isDarkMode, currentTime, activePrayer }) {
   return (
     <div className="space-y-4">
       
-      <div className="bg-gradient-to-r from-[#065f46]/90 via-[#047857]/90 to-[#0f172a]/90 backdrop-blur-2xl p-3.5 rounded-2xl border border-white/20 shadow-xl text-white space-y-1.5 animate-pulse">
-        <div className="flex items-center justify-between">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-[#a7f3d0] flex items-center gap-1">
-            <Sparkles size={12} /> Live Guidance ({activePrayer})
-          </span>
-          <span className="text-[9px] font-mono bg-black/30 px-2 py-0.5 rounded-full text-white/80">
-            {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}
-          </span>
-        </div>
-        <div className="grid grid-cols-2 gap-2 text-[11px] pt-1 border-t border-white/15">
-          <div className="flex items-start gap-1">
-            <CheckCircle2 size={13} className="text-[#34d399] shrink-0 mt-0.5" />
-            <span className="leading-tight text-white/90">{dosText}</span>
-          </div>
-          <div className="flex items-start gap-1">
-            <XCircle size={13} className="text-rose-400 shrink-0 mt-0.5" />
-            <span className="leading-tight text-white/90">{dontsText}</span>
-          </div>
-        </div>
-      </div>
-
       <div className="bg-gradient-to-br from-[#065f46]/85 via-[#047857]/85 to-[#064e3b]/85 backdrop-blur-2xl p-5 rounded-[32px] shadow-2xl border border-white/20 relative overflow-hidden text-white">
         <div className="absolute right-3 -bottom-4 w-32 h-32 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
         
