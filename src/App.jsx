@@ -174,7 +174,6 @@ export default function App() {
     window.location.reload();
   };
 
-  // Helper for parsing time
   const parseTimeToMinutes = (timeStr) => {
     if (!timeStr) return 0;
     const parts = timeStr.split(' ');
@@ -230,66 +229,68 @@ export default function App() {
         <span className="text-[35vw] font-serif whitespace-nowrap select-none">بِسْمِ اللَّهِ</span>
       </div>
 
-      {/* 🌟 Fixed Header with Live Animated Guidance Ticker */}
-      <header className={`${isDarkMode ? 'bg-[#070b12]/80 border-white/10' : 'bg-white/80 border-slate-200/80'} backdrop-blur-2xl border-b sticky top-0 z-40 transition-colors shadow-xl`}>
-        <div className="p-3.5 flex items-center justify-between border-b border-white/5">
-          <div className="flex items-center gap-3">
-            {(currentTool || selectedSurah) && (
-              <button 
-                onClick={() => { setCurrentTool(null); setSelectedSurah(null); }}
-                className={`w-9 h-9 rounded-full ${isDarkMode ? 'bg-white/10 text-[#34d399] border-white/10' : 'bg-white text-emerald-600 border-slate-200'} backdrop-blur-md border flex items-center justify-center active:scale-90 transition-transform shadow-md`}
-              >
-                <ArrowLeft size={18} />
-              </button>
-            )}
-            <div>
-              <h1 className="text-base font-bold tracking-tight">
-                {selectedSurah ? selectedSurah.name : currentTool === 'tasbih' ? 'Digital Tasbih' : currentTool === 'asma' ? 'Asma-ul-Husna' : 'Muslim World'}
-              </h1>
-              {!currentTool && !selectedSurah && (
+      {/* 🌟 Strictly Fixed / Sticky Header */}
+      <div className="sticky top-0 left-0 right-0 z-50">
+        <header className={`${isDarkMode ? 'bg-[#070b12]/90 border-white/10 text-white' : 'bg-white/90 border-slate-200 text-slate-900'} backdrop-blur-2xl border-b shadow-2xl transition-colors`}>
+          <div className="p-3.5 flex items-center justify-between border-b border-white/5">
+            <div className="flex items-center gap-3">
+              {(currentTool || selectedSurah) && (
                 <button 
-                  onClick={() => setShowLocationModal(true)}
-                  className={`flex items-center gap-1.5 mt-0.5 ${isDarkMode ? 'bg-white/10 border-white/15 text-[#34d399]' : 'bg-white border-slate-200 text-emerald-700'} px-3 py-0.5 rounded-full border backdrop-blur-xl active:scale-95 transition-transform shadow-sm`}
+                  onClick={() => { setCurrentTool(null); setSelectedSurah(null); }}
+                  className={`w-9 h-9 rounded-full ${isDarkMode ? 'bg-white/10 text-[#34d399] border-white/10' : 'bg-white text-emerald-600 border-slate-200'} backdrop-blur-md border flex items-center justify-center active:scale-90 transition-transform shadow-md`}
                 >
-                  <MapPin size={11} />
-                  <span className="text-[10px] font-medium">{city}</span>
+                  <ArrowLeft size={18} />
                 </button>
               )}
-            </div>
-          </div>
-
-          <button 
-            onClick={() => setIsDarkMode(!isDarkMode)}
-            className={`w-9 h-9 rounded-2xl ${isDarkMode ? 'bg-white/10 text-amber-400 border-white/15' : 'bg-white text-slate-700 border-slate-200'} backdrop-blur-xl border flex items-center justify-center shadow-lg active:scale-90 transition-transform`}
-          >
-            {isDarkMode ? <Sun size={16} /> : <Moon size={16} />}
-          </button>
-        </div>
-
-        {/* Live Animated Guidance Inside Header */}
-        {!currentTool && !selectedSurah && (
-          <div className="bg-gradient-to-r from-[#065f46] via-[#047857] to-[#0f172a] px-4 py-2 text-white flex flex-col gap-1 border-t border-white/10">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-[#a7f3d0] flex items-center gap-1 animate-pulse">
-                <Sparkles size={11} /> Live Guidance ({activePrayer})
-              </span>
-              <span className="text-[9px] font-mono bg-black/30 px-2 py-0.5 rounded-full text-white/90">
-                {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}
-              </span>
-            </div>
-            <div className="grid grid-cols-2 gap-2 text-[10px] pb-0.5">
-              <div className="flex items-start gap-1">
-                <CheckCircle2 size={12} className="text-[#34d399] shrink-0 mt-0.5" />
-                <span className="leading-tight text-white/90 truncate">{dosText}</span>
-              </div>
-              <div className="flex items-start gap-1">
-                <XCircle size={12} className="text-rose-400 shrink-0 mt-0.5" />
-                <span className="leading-tight text-white/90 truncate">{dontsText}</span>
+              <div>
+                <h1 className="text-base font-bold tracking-tight">
+                  {selectedSurah ? selectedSurah.name : currentTool === 'tasbih' ? 'Digital Tasbih' : currentTool === 'asma' ? 'Asma-ul-Husna' : 'Muslim World'}
+                </h1>
+                {!currentTool && !selectedSurah && (
+                  <button 
+                    onClick={() => setShowLocationModal(true)}
+                    className={`flex items-center gap-1.5 mt-0.5 ${isDarkMode ? 'bg-white/10 border-white/15 text-[#34d399]' : 'bg-white border-slate-200 text-emerald-700'} px-3 py-0.5 rounded-full border backdrop-blur-xl active:scale-95 transition-transform shadow-sm`}
+                  >
+                    <MapPin size={11} />
+                    <span className="text-[10px] font-medium">{city}</span>
+                  </button>
+                )}
               </div>
             </div>
+
+            <button 
+              onClick={() => setIsDarkMode(!isDarkMode)}
+              className={`w-9 h-9 rounded-2xl ${isDarkMode ? 'bg-white/10 text-amber-400 border-white/15' : 'bg-white text-slate-700 border-slate-200'} backdrop-blur-xl border flex items-center justify-center shadow-lg active:scale-90 transition-transform`}
+            >
+              {isDarkMode ? <Sun size={16} /> : <Moon size={16} />}
+            </button>
           </div>
-        )}
-      </header>
+
+          {/* Live Animated Guidance Inside Header */}
+          {!currentTool && !selectedSurah && (
+            <div className="bg-gradient-to-r from-[#065f46] via-[#047857] to-[#0f172a] px-4 py-2 text-white flex flex-col gap-1 border-t border-white/10">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#a7f3d0] flex items-center gap-1 animate-pulse">
+                  <Sparkles size={11} /> Live Guidance ({activePrayer})
+                </span>
+                <span className="text-[9px] font-mono bg-black/30 px-2 py-0.5 rounded-full text-white/90">
+                  {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-[10px] pb-0.5">
+                <div className="flex items-start gap-1">
+                  <CheckCircle2 size={12} className="text-[#34d399] shrink-0 mt-0.5" />
+                  <span className="leading-tight text-white/90 truncate">{dosText}</span>
+                </div>
+                <div className="flex items-start gap-1">
+                  <XCircle size={12} className="text-rose-400 shrink-0 mt-0.5" />
+                  <span className="leading-tight text-white/90 truncate">{dontsText}</span>
+                </div>
+              </div>
+            </div>
+          )}
+        </header>
+      </div>
 
       <main className="p-4 flex-1 max-w-md mx-auto w-full z-10 relative">
         {selectedSurah ? (
