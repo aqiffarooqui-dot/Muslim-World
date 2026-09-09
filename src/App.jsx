@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Home, BookOpen, Heart, Compass, Menu, RotateCcw, Download, CheckCircle, ArrowLeft, RefreshCw, Search, Volume2, Bookmark, Clock, MapPin, Calendar, Bell, Globe, Navigation, Sun, Moon, Sparkles, AlertCircle } from 'lucide-react';
+import { Home, BookOpen, Heart, Compass, Menu, RotateCcw, Download, CheckCircle, ArrowLeft, RefreshCw, Search, Volume2, Bookmark, Clock, MapPin, Calendar, Bell, Globe, Navigation, Sun, Moon, Sparkles, AlertCircle, CheckCircle2, XCircle } from 'lucide-react';
 import { surahsList } from './data/quranData';
 
 export default function App() {
@@ -21,6 +21,13 @@ export default function App() {
   const [tempCityInput, setTempCityInput] = useState('');
   const [locatingGPS, setLocatingGPS] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(true);
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  // Update live clock every second
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     const cachedQuran = localStorage.getItem('full_quran_cache');
@@ -47,7 +54,6 @@ export default function App() {
     return `${hour}:${minuteStr} ${ampm}`;
   };
 
-  // Helper to add/subtract minutes for special Islamic timings estimation
   const adjustTime = (timeStr, minutesToAdd) => {
     if (!timeStr) return '--:--';
     const cleanTime = timeStr.split(' ')[0];
@@ -72,7 +78,6 @@ export default function App() {
         if (timingsData.code === 200) {
           const raw = timingsData.data.timings;
           
-          // Calculate special extended timings
           const formatted = {
             Fajr: format12Hour(raw.Fajr),
             Sunrise: format12Hour(raw.Sunrise),
@@ -81,12 +86,11 @@ export default function App() {
             Maghrib: format12Hour(raw.Maghrib),
             Sunset: format12Hour(raw.Sunset),
             Isha: format12Hour(raw.Isha),
-            // Special Islamic Timings
             SehriEnd: format12Hour(raw.Fajr),
             Ishraq: adjustTime(raw.Sunrise, 20),
             Chasht: adjustTime(raw.Sunrise, 120),
             Zawaal: adjustTime(raw.Dhuhr, -15),
-            Tahajjud: "03:15 AM" // Approximate last third of night
+            Tahajjud: "03:15 AM"
           };
           
           setPrayerTimes(formatted);
@@ -225,7 +229,7 @@ export default function App() {
           <AsmaulHusnaView isDarkMode={isDarkMode} />
         ) : (
           <>
-            {activeTab === 'home' && <HomeScreen setActiveTab={setActiveTab} setCurrentTool={setCurrentTool} prayerTimes={prayerTimes} hijriDate={hijriDate} loadingPrayers={loadingPrayers} city={city} isDarkMode={isDarkMode} />}
+            {activeTab === 'home' && <HomeScreen setActiveTab={setActiveTab} setCurrentTool={setCurrentTool} prayerTimes={prayerTimes} hijriDate={hijriDate} loadingPrayers={loadingPrayers} city={city} isDarkMode={isDarkMode} currentTime={currentTime} />}
             {activeTab === 'quran' && (
               <QuranScreen 
                 isDownloaded={isDownloaded} 
@@ -326,10 +330,81 @@ function NavItem({ icon, label, isActive, onClick, isDarkMode }) {
   );
 }
 
-function HomeScreen({ setActiveTab, setCurrentTool, prayerTimes, hijriDate, loadingPrayers, city, isDarkMode }) {
+function HomeScreen({ setActiveTab, setCurrentTool, prayerTimes, hijriDate, loadingPrayers, city, isDarkMode, currentTime }) {
+  
+  // Helper to parse time string (e.g. "04:32 AM") into minutes from midnight for comparison
+  const parseTimeToMinutes = (timeStr) => {
+    if (!timeStr) return 0;
+    const [time, modifier] = timeStr.split(' ');
+    let [hours, minutes] = time.split(':').map(Number);
+    if (modifier === 'PM' && hours < 12) hours += 12;
+    if (modifier === 'AM' && hours === 12) hours = 0;
+    return hours * 60 + minutes;
+  };
+
+  const currentMinutes = currentTime.getHours() * 60 + currentTime.getMinutes();
+
+  // Determine current active slot & Do's / Don'ts
+  let activePrayer = 'Dhuhr';
+  let dosText = "Engage in Dhikr, Quran recitation, and daily lawful work.";
+  let dontsText = "Avoid wasting time in idle talk or missing prayer slots.";
+
+  if (prayerTimes) {
+    const fajrMin = parseTimeToMinutes(prayerTimes.Fajr);
+    const dhuhrMin = parseTimeToMinutes(prayerTimes.Dhuhr);
+    const asrMin = parseTimeToMinutes(prayerTimes.Asr);
+    const maghribMin = parseTimeToMinutes(prayerTimes.Maghrib);
+    const ishaMin = parseTimeToMinutes(prayerTimes.Isha);
+    const zawaalMin = parseTimeToMinutes(prayerTimes.Zawaal);
+
+    if (currentMinutes >= fajrMin - 30 && currentMinutes < fajrMin) {
+      activePrayer = 'Sehri / Fajr Prep';
+      dosText = "Finish Sehri before Fajrazan; make Niyyah for fasting.";
+      dontsText = "Do not eat or drink after Fajr timing starts.";
+    } else if (currentMinutes >= fajrMin && currentMinutes < fajrMin + 90) {
+      activePrayer = 'Fajr';
+      dosText = "Offer 2 Rakat Sunnah and 2 Rakat Fardh; recite Morning Azkar.";
+      dontsText = "Do not sleep immediately after Fajr until sunrise.";
+    } else if (currentMinutes >= zawaalMin - 15 && currentMinutes <= zawaalMin + 15) {
+      activePrayer = 'Zawaal';
+      dosText = "Engage in quiet reflection, istighfar, and dhikr.";
+      dontsText = "Strictly do NOT offer any Nafl or Qaza prayers during Zawaal.";
+    } else if (currentMinutes >= maghribMin && currentMinutes < maghribMin + 45) {
+      activePrayer = 'Maghrib & Iftar';
+      dosText = "Break your fast immediately with dates/water; make Dua during Iftar.";
+      dontsText = "Do not delay offering Maghrib prayer after breaking fast.";
+    } else if (currentMinutes >= ishaMin) {
+      activePrayer = 'Isha & Tahajjud';
+      dosText = "Offer Isha, Witr, and prepare to rest for late night Tahajjud.";
+      dontsText = "Avoid late night screen time that causes you to miss Fajr.";
+    }
+  }
+
   return (
     <div className="space-y-4">
       
+      {/* 🌟 Top Small Dynamic Do's & Don'ts Popup Ticker */}
+      <div className="bg-gradient-to-r from-[#065f46]/90 via-[#047857]/90 to-[#0f172a]/90 backdrop-blur-2xl p-3.5 rounded-2xl border border-white/20 shadow-xl text-white space-y-1.5 animate-pulse">
+        <div className="flex items-center justify-between">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-[#a7f3d0] flex items-center gap-1">
+            <Sparkles size={12} /> Live Guidance ({activePrayer})
+          </span>
+          <span className="text-[9px] font-mono bg-black/30 px-2 py-0.5 rounded-full text-white/80">
+            {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          </span>
+        </div>
+        <div className="grid grid-cols-2 gap-2 text-[11px] pt-1 border-t border-white/15">
+          <div className="flex items-start gap-1">
+            <CheckCircle2 size={13} className="text-[#34d399] shrink-0 mt-0.5" />
+            <span className="leading-tight text-white/90">{dosText}</span>
+          </div>
+          <div className="flex items-start gap-1">
+            <XCircle size={13} className="text-rose-400 shrink-0 mt-0.5" />
+            <span className="leading-tight text-white/90">{dontsText}</span>
+          </div>
+        </div>
+      </div>
+
       {/* Ramazan & Fasting Card */}
       <div className="bg-gradient-to-br from-[#065f46]/85 via-[#047857]/85 to-[#064e3b]/85 backdrop-blur-2xl p-5 rounded-[32px] shadow-2xl border border-white/20 relative overflow-hidden text-white">
         <div className="absolute right-3 -bottom-4 w-32 h-32 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
@@ -383,10 +458,10 @@ function HomeScreen({ setActiveTab, setCurrentTool, prayerTimes, hijriDate, load
         </div>
       </div>
 
-      {/* Daily Prayers Glass List */}
+      {/* Daily Prayers Glass List (With Active Clock Highlighting) */}
       <div className={`${isDarkMode ? 'bg-white/[0.04] border-white/10' : 'bg-white/70 border-slate-200/80 shadow-xl'} backdrop-blur-2xl p-4 rounded-[28px] border space-y-3 transition-colors`}>
         <div className="flex justify-between items-center pb-2 border-b border-white/5">
-          <span className={`text-xs font-bold ${isDarkMode ? 'text-white/50' : 'text-slate-400'} uppercase tracking-wider`}>Daily Prayers</span>
+          <span className={`text-xs font-bold ${isDarkMode ? 'text-white/50' : 'text-slate-400'} uppercase tracking-wider`}>Daily Prayers (Clock Aligned)</span>
           <Bell size={14} className="text-[#34d399]" />
         </div>
         {loadingPrayers ? (
@@ -399,17 +474,23 @@ function HomeScreen({ setActiveTab, setCurrentTool, prayerTimes, hijriDate, load
               { name: 'Asr', time: prayerTimes?.Asr },
               { name: 'Maghrib', time: prayerTimes?.Maghrib },
               { name: 'Isha', time: prayerTimes?.Isha },
-            ].map((p, idx) => (
-              <div key={idx} className={`flex justify-between items-center p-3 rounded-2xl backdrop-blur-md transition-all ${idx === 1 ? 'bg-[#059669]/30 border border-[#34d399]/40 shadow-lg' : isDarkMode ? 'bg-white/[0.02] border-white/5' : 'bg-white/50 border-slate-100'}`}>
-                <span className={`text-xs font-bold ${idx === 1 ? 'text-[#34d399]' : isDarkMode ? 'text-white/90' : 'text-slate-700'}`}>{p.name}</span>
-                <span className={`text-xs font-mono ${idx === 1 ? 'text-[#34d399] font-bold' : isDarkMode ? 'text-white/70' : 'text-slate-600'}`}>{p.time || '--:--'}</span>
-              </div>
-            ))}
+            ].map((p, idx) => {
+              const isCurrent = activePrayer.toLowerCase().includes(p.name.toLowerCase());
+              return (
+                <div key={idx} className={`flex justify-between items-center p-3 rounded-2xl backdrop-blur-md transition-all ${isCurrent ? 'bg-[#059669]/40 border-2 border-[#34d399] shadow-lg scale-[1.02]' : isDarkMode ? 'bg-white/[0.02] border-white/5' : 'bg-white/50 border-slate-100'}`}>
+                  <span className={`text-xs font-bold flex items-center gap-1.5 ${isCurrent ? 'text-[#34d399]' : isDarkMode ? 'text-white/90' : 'text-slate-700'}`}>
+                    {isCurrent && <span className="w-2 h-2 rounded-full bg-[#34d399] animate-ping"></span>}
+                    {p.name}
+                  </span>
+                  <span className={`text-xs font-mono ${isCurrent ? 'text-[#34d399] font-extrabold' : isDarkMode ? 'text-white/70' : 'text-slate-600'}`}>{p.time || '--:--'}</span>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
 
-      {/* 🌟 Special Islamic Timings Card (Ishraq, Chasht, Tahajjud, Zawaal) */}
+      {/* Special Islamic Timings Card */}
       <div className={`${isDarkMode ? 'bg-white/[0.04] border-white/10' : 'bg-white/70 border-slate-200/80 shadow-xl'} backdrop-blur-2xl p-4 rounded-[28px] border space-y-3 transition-colors`}>
         <div className="flex justify-between items-center pb-2 border-b border-white/5">
           <span className={`text-xs font-bold ${isDarkMode ? 'text-white/50' : 'text-slate-400'} uppercase tracking-wider flex items-center gap-1.5`}>
@@ -429,7 +510,7 @@ function HomeScreen({ setActiveTab, setCurrentTool, prayerTimes, hijriDate, load
             <span className={isDarkMode ? 'text-white/80' : 'text-slate-700'}>Chasht (Mid-Morning)</span>
             <span className="font-mono font-bold text-[#34d399]">{prayerTimes?.Chasht || '08:00 AM'}</span>
           </div>
-          <div className={`flex justify-between items-center p-2.5 rounded-xl ${isDarkMode ? 'bg-rose-500/10 border border-rose-500/20' : 'bg-rose-50 border-rose-100'}`}>
+          <div className={`flex justify-between items-center p-2.5 rounded-xl ${activePrayer === 'Zawaal' ? 'bg-rose-500/30 border-2 border-rose-500' : isDarkMode ? 'bg-rose-500/10 border border-rose-500/20' : 'bg-rose-50 border-rose-100'}`}>
             <span className="text-rose-400 font-bold flex items-center gap-1"><AlertCircle size={12}/> Zawaal (No Prayer Time)</span>
             <span className="font-mono font-bold text-rose-400">{prayerTimes?.Zawaal || '12:13 PM'}</span>
           </div>
