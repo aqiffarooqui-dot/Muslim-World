@@ -11,7 +11,6 @@ export default function App() {
   const [updateAvailable, setUpdateAvailable] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Check storage & Vercel version updates
   useEffect(() => {
     const cachedQuran = localStorage.getItem('full_quran_cache');
     if (cachedQuran) setIsDownloaded(true);
@@ -47,27 +46,26 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#090d16] text-white flex flex-col pb-20 select-none">
-      {/* Header */}
-      <header className="bg-[#0f172a] border-b border-[#1e293b] p-4 sticky top-0 z-40">
+    <div className="min-h-screen bg-[#070b12] text-white flex flex-col pb-28 select-none font-sans">
+      <header className="bg-[#070b12]/80 backdrop-blur-xl border-b border-white/5 p-4 sticky top-0 z-40">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             {(currentTool || selectedSurah) && (
               <button 
                 onClick={() => { setCurrentTool(null); setSelectedSurah(null); }}
-                className="w-9 h-9 rounded-full bg-[#1e293b] flex items-center justify-center text-[#34d399]"
+                className="w-9 h-9 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center text-[#34d399] active:scale-90 transition-transform"
               >
                 <ArrowLeft size={18} />
               </button>
             )}
             <div>
-              <h1 className="text-base font-bold">
+              <h1 className="text-base font-bold tracking-tight">
                 {selectedSurah ? selectedSurah.name : currentTool === 'tasbih' ? 'Digital Tasbih' : currentTool === 'asma' ? 'Asma-ul-Husna' : 'Muslim World'}
               </h1>
               {!currentTool && !selectedSurah && (
                 <div className="flex items-center gap-1 mt-0.5">
                   <MapPin size={12} className="text-[#34d399]" />
-                  <p className="text-[11px] text-[#34d399]">New Delhi, India</p>
+                  <p className="text-[11px] text-[#34d399] font-medium">New Delhi, India</p>
                 </div>
               )}
             </div>
@@ -75,7 +73,6 @@ export default function App() {
         </div>
       </header>
 
-      {/* Main Content Area */}
       <main className="p-4 flex-1 max-w-md mx-auto w-full">
         {selectedSurah ? (
           <SurahDetail surah={selectedSurah} />
@@ -103,31 +100,31 @@ export default function App() {
         )}
       </main>
 
-      {/* In-App Update Banner */}
       {updateAvailable && (
-        <div className="fixed bottom-20 left-4 right-4 bg-[#0f172a] border border-[#34d399] p-4 rounded-2xl flex justify-between items-center z-50 shadow-2xl">
+        <div className="fixed bottom-24 left-4 right-4 bg-[#0f172a]/90 backdrop-blur-xl border border-[#34d399]/40 p-4 rounded-3xl flex justify-between items-center z-50 shadow-2xl">
           <div>
             <p className="text-[#34d399] text-xs font-bold">New Update Available! ✨</p>
-            <p className="text-[#94a3b8] text-[10px]">Tap update for latest features.</p>
+            <p className="text-white/60 text-[10px]">Tap update for latest features.</p>
           </div>
           <button 
             onClick={handleRefreshApp}
-            className="bg-[#059669] text-white px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5"
+            className="bg-gradient-to-r from-[#059669] to-[#10b981] text-white px-3.5 py-2 rounded-2xl text-xs font-bold flex items-center gap-1.5 shadow-lg active:scale-95 transition-transform"
           >
             <RefreshCw size={14} /> Update Now
           </button>
         </div>
       )}
 
-      {/* Bottom Navigation */}
       {!currentTool && !selectedSurah && (
-        <nav className="fixed bottom-0 left-0 right-0 h-16 bg-[#0f172a] border-t border-[#1e293b] flex justify-around items-center z-40">
-          <NavItem icon={<Home size={20} />} label="Home" isActive={activeTab === 'home'} onClick={() => setActiveTab('home')} />
-          <NavItem icon={<BookOpen size={20} />} label="Quran" isActive={activeTab === 'quran'} onClick={() => setActiveTab('quran')} />
-          <NavItem icon={<Heart size={20} />} label="Dua" isActive={activeTab === 'dua'} onClick={() => setActiveTab('dua')} />
-          <NavItem icon={<Compass size={20} />} label="Qibla" isActive={activeTab === 'qibla'} onClick={() => setActiveTab('qibla')} />
-          <NavItem icon={<Menu size={20} />} label="More" isActive={activeTab === 'more'} onClick={() => setActiveTab('more')} />
-        </nav>
+        <div className="fixed bottom-4 left-4 right-4 z-40 flex justify-center">
+          <nav className="bg-[#0f172a]/75 backdrop-blur-2xl border border-white/10 h-16 px-3 rounded-full flex justify-between items-center max-w-sm w-full shadow-2xl shadow-black/60">
+            <NavItem icon={<Home size={20} />} label="Home" isActive={activeTab === 'home'} onClick={() => setActiveTab('home')} />
+            <NavItem icon={<BookOpen size={20} />} label="Quran" isActive={activeTab === 'quran'} onClick={() => setActiveTab('quran')} />
+            <NavItem icon={<Heart size={20} />} label="Dua" isActive={activeTab === 'dua'} onClick={() => setActiveTab('dua')} />
+            <NavItem icon={<Compass size={20} />} label="Qibla" isActive={activeTab === 'qibla'} onClick={() => setActiveTab('qibla')} />
+            <NavItem icon={<Menu size={20} />} label="More" isActive={activeTab === 'more'} onClick={() => setActiveTab('more')} />
+          </nav>
+        </div>
       )}
     </div>
   );
@@ -135,9 +132,15 @@ export default function App() {
 
 function NavItem({ icon, label, isActive, onClick }) {
   return (
-    <button onClick={onClick} className="flex flex-col items-center justify-center flex-1">
-      <span className={isActive ? 'text-[#34d399]' : 'text-[#94a3b8]'}>{icon}</span>
-      <span className={`text-[10px] mt-1 ${isActive ? 'text-[#34d399] font-bold' : 'text-[#94a3b8]'}`}>{label}</span>
+    <button 
+      onClick={onClick} 
+      className={`flex flex-col items-center justify-center flex-1 h-full relative transition-all duration-300 ${isActive ? 'scale-110' : 'opacity-70 hover:opacity-100'}`}
+    >
+      <span className={isActive ? 'text-[#34d399]' : 'text-white/70'}>{icon}</span>
+      <span className={`text-[9px] mt-0.5 tracking-tight ${isActive ? 'text-[#34d399] font-bold' : 'text-white/60'}`}>{label}</span>
+      {isActive && (
+        <span className="absolute bottom-1 w-1 h-1 bg-[#34d399] rounded-full shadow-[0_0_8px_#34d399]"></span>
+      )}
     </button>
   );
 }
@@ -145,10 +148,8 @@ function NavItem({ icon, label, isActive, onClick }) {
 function HomeScreen({ setActiveTab, setCurrentTool }) {
   const [timeLeft, setTimeLeft] = useState('02:14:35');
 
-  // Simple live countdown simulation ticker
   useEffect(() => {
     const timer = setInterval(() => {
-      // Just a dynamic aesthetic ticker for countdown simulation
       setTimeLeft('02:14:30');
     }, 1000);
     return () => clearInterval(timer);
@@ -164,9 +165,8 @@ function HomeScreen({ setActiveTab, setCurrentTool }) {
 
   return (
     <div className="space-y-4">
-      {/* Dynamic Hero Prayer Card with Countdown & Animation */}
-      <div className="bg-gradient-to-br from-[#059669] to-[#047857] p-5 rounded-3xl shadow-xl relative overflow-hidden">
-        <div className="absolute -right-6 -bottom-6 w-32 h-32 bg-white/10 rounded-full blur-xl pointer-events-none"></div>
+      <div className="bg-gradient-to-br from-[#059669]/90 to-[#047857]/90 backdrop-blur-2xl p-5 rounded-[28px] shadow-2xl border border-white/10 relative overflow-hidden">
+        <div className="absolute -right-8 -bottom-8 w-36 h-36 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
         
         <div className="flex justify-between items-start">
           <div>
@@ -174,57 +174,63 @@ function HomeScreen({ setActiveTab, setCurrentTool }) {
               <Calendar size={13} />
               <span>27 Safar 1448 AH</span>
             </div>
-            <h2 className="text-white text-2xl font-bold mt-2">Next: Dhuhr</h2>
-            <p className="text-[#ecfdf5] text-xs mt-0.5">Starts in <span className="font-mono font-bold text-white bg-black/20 px-1.5 py-0.5 rounded">{timeLeft}</span></p>
+            <h2 className="text-white text-2xl font-bold mt-2 tracking-tight">Next: Dhuhr</h2>
+            <p className="text-[#ecfdf5] text-xs mt-0.5">Starts in <span className="font-mono font-bold text-white bg-black/30 px-2 py-0.5 rounded-lg border border-white/10">{timeLeft}</span></p>
           </div>
-          <div className="bg-white/20 p-2.5 rounded-2xl backdrop-blur-md">
-            <Clock className="text-white animate-spin" style={{ animationDuration: '10s' }} size={24} />
+          <div className="bg-white/15 p-3 rounded-2xl backdrop-blur-md border border-white/20">
+            <Clock className="text-white animate-spin" style={{ animationDuration: '12s' }} size={22} />
           </div>
         </div>
 
-        <div className="mt-5 pt-4 border-t border-white/15 flex justify-between items-center text-xs text-[#ecfdf5]">
+        <div className="mt-5 pt-3.5 border-t border-white/15 flex justify-between items-center text-xs text-[#ecfdf5] font-medium">
           <span>Sunrise: 05:55 AM</span>
           <span>Sunset: 07:12 PM</span>
         </div>
       </div>
 
-      {/* Prayer Times List */}
-      <div className="bg-[#1e293b] p-4 rounded-2xl border border-[#334155] space-y-3">
-        <div className="flex justify-between items-center pb-2 border-b border-[#334155]">
-          <span className="text-xs font-bold text-[#94a3b8] uppercase tracking-wider">Today's Schedule</span>
+      <div className="bg-white/[0.04] backdrop-blur-xl p-4 rounded-[28px] border border-white/10 space-y-3 shadow-xl">
+        <div className="flex justify-between items-center pb-2 border-b border-white/5">
+          <span className="text-xs font-bold text-white/50 uppercase tracking-wider">Today's Schedule</span>
           <Bell size={14} className="text-[#34d399]" />
         </div>
         <div className="space-y-2">
           {prayers.map((p, idx) => (
-            <div key={idx} className={`flex justify-between items-center p-2.5 rounded-xl ${p.active ? 'bg-[#059669]/20 border border-[#34d399]/40' : 'bg-[#0f172a]'}`}>
-              <span className={`text-xs font-bold ${p.active ? 'text-[#34d399]' : 'text-white'}`}>{p.name}</span>
-              <span className={`text-xs font-mono ${p.active ? 'text-[#34d399] font-bold' : 'text-[#94a3b8]'}`}>{p.time}</span>
+            <div key={idx} className={`flex justify-between items-center p-3 rounded-2xl transition-all ${p.active ? 'bg-[#059669]/30 border border-[#34d399]/40 shadow-lg' : 'bg-white/[0.02] border border-white/5'}`}>
+              <span className={`text-xs font-bold ${p.active ? 'text-[#34d399]' : 'text-white/90'}`}>{p.name}</span>
+              <span className={`text-xs font-mono ${p.active ? 'text-[#34d399] font-bold' : 'text-white/60'}`}>{p.time}</span>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Quick Navigation Cards */}
       <div className="grid grid-cols-2 gap-3">
-        <div onClick={() => setActiveTab('quran')} className="bg-[#1e293b] p-4 rounded-2xl border border-[#334155] cursor-pointer active:scale-95 transition-transform">
-          <BookOpen className="text-[#34d399] mb-2" size={24} />
-          <p className="text-white text-sm font-bold">Al-Quran</p>
-          <p className="text-[#94a3b8] text-[10px] mt-0.5">Read & Listen 114 Surahs</p>
+        <div onClick={() => setActiveTab('quran')} className="bg-white/[0.04] backdrop-blur-xl p-4 rounded-[28px] border border-white/10 cursor-pointer active:scale-95 transition-transform shadow-xl">
+          <div className="w-10 h-10 rounded-2xl bg-[#34d399]/15 flex items-center justify-center text-[#34d399] mb-3 border border-[#34d399]/20">
+            <BookOpen size={20} />
+          </div>
+          <p className="text-white text-sm font-bold tracking-tight">Al-Quran</p>
+          <p className="text-white/50 text-[10px] mt-0.5">Read & Listen 114 Surahs</p>
         </div>
-        <div onClick={() => setCurrentTool('tasbih')} className="bg-[#1e293b] p-4 rounded-2xl border border-[#334155] cursor-pointer active:scale-95 transition-transform">
-          <RotateCcw className="text-[#34d399] mb-2" size={24} />
-          <p className="text-white text-sm font-bold">Digital Tasbih</p>
-          <p className="text-[#94a3b8] text-[10px] mt-0.5">Count daily Zikr</p>
+        <div onClick={() => setCurrentTool('tasbih')} className="bg-white/[0.04] backdrop-blur-xl p-4 rounded-[28px] border border-white/10 cursor-pointer active:scale-95 transition-transform shadow-xl">
+          <div className="w-10 h-10 rounded-2xl bg-[#34d399]/15 flex items-center justify-center text-[#34d399] mb-3 border border-[#34d399]/20">
+            <RotateCcw size={20} />
+          </div>
+          <p className="text-white text-sm font-bold tracking-tight">Digital Tasbih</p>
+          <p className="text-white/50 text-[10px] mt-0.5">Count daily Zikr</p>
         </div>
-        <div onClick={() => setActiveTab('qibla')} className="bg-[#1e293b] p-4 rounded-2xl border border-[#334155] cursor-pointer active:scale-95 transition-transform">
-          <Compass className="text-[#34d399] mb-2" size={24} />
-          <p className="text-white text-sm font-bold">Qibla Direction</p>
-          <p className="text-[#94a3b8] text-[10px] mt-0.5">Accurate Kaaba compass</p>
+        <div onClick={() => setActiveTab('qibla')} className="bg-white/[0.04] backdrop-blur-xl p-4 rounded-[28px] border border-white/10 cursor-pointer active:scale-95 transition-transform shadow-xl">
+          <div className="w-10 h-10 rounded-2xl bg-[#34d399]/15 flex items-center justify-center text-[#34d399] mb-3 border border-[#34d399]/20">
+            <Compass size={20} />
+          </div>
+          <p className="text-white text-sm font-bold tracking-tight">Qibla Direction</p>
+          <p className="text-white/50 text-[10px] mt-0.5">Accurate Kaaba compass</p>
         </div>
-        <div onClick={() => setCurrentTool('asma')} className="bg-[#1e293b] p-4 rounded-2xl border border-[#334155] cursor-pointer active:scale-95 transition-transform">
-          <Heart className="text-[#34d399] mb-2" size={24} />
-          <p className="text-white text-sm font-bold">99 Names</p>
-          <p className="text-[#94a3b8] text-[10px] mt-0.5">Asma-ul-Husna</p>
+        <div onClick={() => setCurrentTool('asma')} className="bg-white/[0.04] backdrop-blur-xl p-4 rounded-[28px] border border-white/10 cursor-pointer active:scale-95 transition-transform shadow-xl">
+          <div className="w-10 h-10 rounded-2xl bg-[#34d399]/15 flex items-center justify-center text-[#34d399] mb-3 border border-[#34d399]/20">
+            <Heart size={20} />
+          </div>
+          <p className="text-white text-sm font-bold tracking-tight">99 Names</p>
+          <p className="text-white/50 text-[10px] mt-0.5">Asma-ul-Husna</p>
         </div>
       </div>
     </div>
@@ -241,7 +247,7 @@ function QuranScreen({ isDownloaded, downloading, downloadFullQuran, setSelected
   return (
     <div className="space-y-3">
       {!isDownloaded ? (
-        <div className="bg-[#065f46] p-4 rounded-2xl flex justify-between items-center">
+        <div className="bg-gradient-to-r from-[#065f46] to-[#047857] p-4 rounded-[24px] flex justify-between items-center shadow-xl border border-white/10">
           <div>
             <p className="text-white text-xs font-bold">Download Offline Quran</p>
             <p className="text-[#a7f3d0] text-[10px]">Complete text in cache (~3MB)</p>
@@ -249,45 +255,44 @@ function QuranScreen({ isDownloaded, downloading, downloadFullQuran, setSelected
           <button 
             onClick={downloadFullQuran} 
             disabled={downloading}
-            className="bg-white text-[#065f46] px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5"
+            className="bg-white text-[#065f46] px-4 py-2 rounded-2xl text-xs font-bold flex items-center gap-1.5 shadow-lg active:scale-95 transition-transform"
           >
             {downloading ? <span className="animate-spin">⏳</span> : <Download size={14} />}
             {downloading ? 'Downloading...' : 'Download'}
           </button>
         </div>
       ) : (
-        <div className="bg-[#1e293b] p-3.5 rounded-2xl flex items-center gap-2.5">
+        <div className="bg-white/[0.04] backdrop-blur-xl p-3.5 rounded-[24px] flex items-center gap-2.5 border border-white/10 shadow-lg">
           <CheckCircle size={16} className="text-[#34d399]" />
           <p className="text-[#34d399] text-xs font-bold">Quran saved offline successfully!</p>
         </div>
       )}
 
-      {/* Search Bar */}
       <div className="relative">
-        <Search className="absolute left-3.5 top-3 text-[#94a3b8]" size={16} />
+        <Search className="absolute left-4 top-3.5 text-white/40" size={16} />
         <input 
           type="text" 
           placeholder="Search Surah by name or number..." 
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full bg-[#1e293b] text-white pl-10 pr-4 py-2.5 rounded-xl text-xs border border-[#334155] focus:outline-none focus:border-[#34d399]"
+          className="w-full bg-white/[0.04] backdrop-blur-xl text-white pl-11 pr-4 py-3 rounded-2xl text-xs border border-white/10 focus:outline-none focus:border-[#34d399] shadow-inner placeholder-white/30"
         />
       </div>
 
-      <p className="text-[#94a3b8] text-[11px] font-bold uppercase tracking-wider">Surah List ({filteredSurahs.length})</p>
+      <p className="text-white/40 text-[11px] font-bold uppercase tracking-wider px-1">Surah List ({filteredSurahs.length})</p>
       {filteredSurahs.map(surah => (
         <div 
           key={surah.no} 
           onClick={() => setSelectedSurah(surah)}
-          className="bg-[#1e293b] p-4 rounded-2xl border border-[#334155] flex justify-between items-center cursor-pointer active:scale-[0.99] transition-transform"
+          className="bg-white/[0.04] backdrop-blur-xl p-4 rounded-[24px] border border-white/10 flex justify-between items-center cursor-pointer active:scale-[0.99] transition-transform shadow-xl"
         >
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-[#34d399]/10 flex items-center justify-center text-[#34d399] text-xs font-bold">
+          <div className="flex items-center gap-3.5">
+            <div className="w-10 h-10 rounded-2xl bg-[#34d399]/15 flex items-center justify-center text-[#34d399] text-xs font-bold border border-[#34d399]/20">
               {surah.no}
             </div>
             <div>
-              <p className="text-white text-sm font-bold">{surah.name}</p>
-              <p className="text-[#94a3b8] text-[11px]">{surah.meaning} • {surah.versesCount} Verses</p>
+              <p className="text-white text-sm font-bold tracking-tight">{surah.name}</p>
+              <p className="text-white/50 text-[11px]">{surah.meaning} • {surah.versesCount} Verses</p>
             </div>
           </div>
           <p className="text-[#34d399] text-lg font-bold">{surah.arabic}</p>
@@ -300,22 +305,22 @@ function QuranScreen({ isDownloaded, downloading, downloadFullQuran, setSelected
 function SurahDetail({ surah }) {
   return (
     <div className="space-y-3">
-      <div className="bg-[#065f46] p-5 rounded-3xl text-center">
-        <h2 className="text-white text-lg font-bold">{surah.name}</h2>
-        <p className="text-[#a7f3d0] text-xs mt-0.5">{surah.meaning} • {surah.versesCount} Verses</p>
-        <p className="text-[#ecfdf5] text-2xl font-bold mt-2">{surah.arabic}</p>
+      <div className="bg-gradient-to-br from-[#065f46] to-[#047857] p-6 rounded-[32px] text-center shadow-2xl border border-white/10">
+        <h2 className="text-white text-xl font-bold tracking-tight">{surah.name}</h2>
+        <p className="text-[#a7f3d0] text-xs mt-1 font-medium">{surah.meaning} • {surah.versesCount} Verses</p>
+        <p className="text-[#ecfdf5] text-3xl font-bold mt-3">{surah.arabic}</p>
       </div>
       {surah.verses.map(v => (
-        <div key={v.id} className="bg-[#1e293b] p-4 rounded-2xl border border-[#334155] space-y-2">
+        <div key={v.id} className="bg-white/[0.04] backdrop-blur-xl p-4 rounded-[24px] border border-white/10 space-y-2.5 shadow-xl">
           <div className="flex justify-between items-center">
-            <span className="text-[#34d399] text-[10px] font-bold px-2 py-0.5 bg-[#34d399]/10 rounded-md">Ayah {v.id}</span>
-            <div className="flex gap-2 text-[#94a3b8]">
-              <Volume2 size={14} className="cursor-pointer hover:text-[#34d399]" />
-              <Bookmark size={14} className="cursor-pointer hover:text-[#34d399]" />
+            <span className="text-[#34d399] text-[10px] font-bold px-2.5 py-1 bg-[#34d399]/15 rounded-xl border border-[#34d399]/20">Ayah {v.id}</span>
+            <div className="flex gap-3 text-white/40">
+              <Volume2 size={15} className="cursor-pointer hover:text-[#34d399] transition-colors" />
+              <Bookmark size={15} className="cursor-pointer hover:text-[#34d399] transition-colors" />
             </div>
           </div>
-          <p className="text-[#ecfdf5] text-xl text-right font-bold">{v.arabic}</p>
-          <p className="text-[#cbd5e1] text-xs">{v.translation}</p>
+          <p className="text-[#ecfdf5] text-xl text-right font-bold leading-relaxed">{v.arabic}</p>
+          <p className="text-white/70 text-xs leading-normal">{v.translation}</p>
         </div>
       ))}
     </div>
@@ -330,12 +335,12 @@ function DuaScreen() {
   ];
   return (
     <div className="space-y-3">
-      <p className="text-[#94a3b8] text-[11px] font-bold uppercase tracking-wider">Hisnul Muslim Duas</p>
+      <p className="text-white/40 text-[11px] font-bold uppercase tracking-wider px-1">Hisnul Muslim Duas</p>
       {duas.map((d, i) => (
-        <div key={i} className="bg-[#1e293b] p-4 rounded-2xl border border-[#334155] space-y-2">
-          <p className="text-white text-sm font-bold">{d.title}</p>
-          <p className="text-[#ecfdf5] text-lg text-right font-bold">{d.arabic}</p>
-          <p className="text-[#cbd5e1] text-xs">{d.meaning}</p>
+        <div key={i} className="bg-white/[0.04] backdrop-blur-xl p-4 rounded-[24px] border border-white/10 space-y-2.5 shadow-xl">
+          <p className="text-white text-sm font-bold tracking-tight">{d.title}</p>
+          <p className="text-[#ecfdf5] text-lg text-right font-bold leading-relaxed">{d.arabic}</p>
+          <p className="text-white/70 text-xs leading-normal">{d.meaning}</p>
         </div>
       ))}
     </div>
@@ -344,10 +349,13 @@ function DuaScreen() {
 
 function QiblaScreen() {
   return (
-    <div className="flex flex-col items-center justify-center py-16">
-      <Compass size={80} className="text-[#34d399] animate-pulse" />
-      <p className="text-white text-sm font-bold mt-4">Qibla Direction Compass</p>
-      <p className="text-[#94a3b8] text-xs mt-1">291° West-Northwest from New Delhi</p>
+    <div className="flex flex-col items-center justify-center py-20">
+      <div className="w-32 h-32 rounded-full bg-white/[0.04] backdrop-blur-2xl border border-white/10 flex items-center justify-center shadow-2xl relative">
+        <div className="absolute inset-0 rounded-full border border-[#34d399]/30 animate-ping opacity-25"></div>
+        <Compass size={64} className="text-[#34d399]" />
+      </div>
+      <p className="text-white text-base font-bold mt-6 tracking-tight">Qibla Direction Compass</p>
+      <p className="text-white/50 text-xs mt-1 font-medium">291° West-Northwest from New Delhi</p>
     </div>
   );
 }
@@ -357,17 +365,23 @@ function MoreScreen({ setCurrentTool }) {
     <div className="space-y-3">
       <div 
         onClick={() => setCurrentTool('tasbih')}
-        className="bg-[#1e293b] p-4 rounded-2xl border border-[#334155] cursor-pointer"
+        className="bg-white/[0.04] backdrop-blur-xl p-4 rounded-[24px] border border-white/10 cursor-pointer shadow-xl flex items-center justify-between active:scale-[0.99] transition-transform"
       >
-        <p className="text-white text-sm font-bold">Digital Tasbih Counter</p>
-        <p className="text-[#94a3b8] text-[11px] mt-0.5">Count your daily Zikr with ease</p>
+        <div>
+          <p className="text-white text-sm font-bold tracking-tight">Digital Tasbih Counter</p>
+          <p className="text-white/50 text-[11px] mt-0.5">Count your daily Zikr with ease</p>
+        </div>
+        <RotateCcw className="text-[#34d399]" size={20} />
       </div>
       <div 
         onClick={() => setCurrentTool('asma')}
-        className="bg-[#1e293b] p-4 rounded-2xl border border-[#334155] cursor-pointer"
+        className="bg-white/[0.04] backdrop-blur-xl p-4 rounded-[24px] border border-white/10 cursor-pointer shadow-xl flex items-center justify-between active:scale-[0.99] transition-transform"
       >
-        <p className="text-white text-sm font-bold">Asma-ul-Husna (99 Names)</p>
-        <p className="text-[#94a3b8] text-[11px] mt-0.5">Learn beautiful names of Allah</p>
+        <div>
+          <p className="text-white text-sm font-bold tracking-tight">Asma-ul-Husna (99 Names)</p>
+          <p className="text-white/50 text-[11px] mt-0.5">Learn beautiful names of Allah</p>
+        </div>
+        <Heart className="text-[#34d399]" size={20} />
       </div>
     </div>
   );
@@ -376,18 +390,20 @@ function MoreScreen({ setCurrentTool }) {
 function TasbihView() {
   const [count, setCount] = useState(0);
   return (
-    <div className="flex flex-col items-center justify-center py-8">
-      <p className="text-[#ecfdf5] text-2xl font-bold">سُبْحَانَ ٱللَّٰهِ</p>
+    <div className="flex flex-col items-center justify-center py-10">
+      <p className="text-[#ecfdf5] text-3xl font-bold tracking-wider mb-2">سُبْحَانَ ٱللَّٰهِ</p>
+      
       <div 
         onClick={() => setCount(count + 1)}
-        className="w-44 h-44 rounded-full bg-[#059669] flex flex-col items-center justify-center my-8 border-4 border-[#34d399]/30 active:scale-95 transition-transform cursor-pointer shadow-2xl"
+        className="w-52 h-52 rounded-[60%_40%_70%_30%/50%_60%_40%_50%] bg-gradient-to-br from-[#059669] via-[#10b981] to-[#047857] flex flex-col items-center justify-center my-10 border-4 border-white/20 active:scale-90 transition-all duration-300 shadow-[0_20px_50px_rgba(5,150,105,0.4)] cursor-pointer animate-[morph_6s_ease-in-out_infinite]"
       >
-        <span className="text-white text-5xl font-bold">{count}</span>
-        <span className="text-[#a7f3d0] text-[10px] font-bold mt-1 tracking-wider">TAP TO COUNT</span>
+        <span className="text-white text-6xl font-extrabold tracking-tight drop-shadow-md">{count}</span>
+        <span className="text-[#a7f3d0] text-[10px] font-bold mt-1 tracking-widest uppercase">TAP WATER DROP</span>
       </div>
+
       <button 
         onClick={() => setCount(0)}
-        className="flex items-center gap-1.5 bg-[#1e293b] px-4 py-2.5 rounded-xl text-[#f43f5e] text-xs font-bold border border-[#334155]"
+        className="flex items-center gap-1.5 bg-white/[0.04] backdrop-blur-xl px-5 py-3 rounded-2xl text-[#f43f5e] text-xs font-bold border border-white/10 shadow-xl active:scale-95 transition-transform"
       >
         <RotateCcw size={14} /> Reset Counter
       </button>
@@ -403,14 +419,14 @@ function AsmaulHusnaView() {
   ];
   return (
     <div className="space-y-3">
-      <p className="text-[#94a3b8] text-[11px] font-bold uppercase tracking-wider">99 Names of Allah</p>
+      <p className="text-white/40 text-[11px] font-bold uppercase tracking-wider px-1">99 Names of Allah</p>
       {names.map(n => (
-        <div key={n.no} className="bg-[#1e293b] p-4 rounded-2xl border border-[#334155] flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-[#34d399]/10 flex items-center justify-center text-[#34d399] text-xs font-bold">{n.no}</div>
+        <div key={n.no} className="bg-white/[0.04] backdrop-blur-xl p-4 rounded-[24px] border border-white/10 flex justify-between items-center shadow-xl">
+          <div className="flex items-center gap-3.5">
+            <div className="w-9 h-9 rounded-2xl bg-[#34d399]/15 flex items-center justify-center text-[#34d399] text-xs font-bold border border-[#34d399]/20">{n.no}</div>
             <div>
-              <p className="text-white text-sm font-bold">{n.name}</p>
-              <p className="text-[#94a3b8] text-[11px]">{n.meaning}</p>
+              <p className="text-white text-sm font-bold tracking-tight">{n.name}</p>
+              <p className="text-white/50 text-[11px]">{n.meaning}</p>
             </div>
           </div>
           <p className="text-[#34d399] text-lg font-bold">{n.arabic}</p>
