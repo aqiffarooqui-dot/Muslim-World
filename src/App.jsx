@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Home, BookOpen, Heart, Compass, Menu, RotateCcw, Download, CheckCircle, ArrowLeft, RefreshCw, Search, Volume2, Bookmark, Clock, MapPin, Calendar, Bell, Globe, Navigation, Sun, Moon } from 'lucide-react';
+import { Home, BookOpen, Heart, Compass, Menu, RotateCcw, Download, CheckCircle, ArrowLeft, RefreshCw, Search, Volume2, Bookmark, Clock, MapPin, Calendar, Bell, Globe, Navigation, Sun, Moon, Sparkles } from 'lucide-react';
 import { surahsList } from './data/quranData';
 
 export default function App() {
@@ -36,20 +36,17 @@ export default function App() {
       }).catch(() => {});
   }, []);
 
-  // Convert 24hr time string to 12hr AM/PM format
   const format12Hour = (timeStr) => {
     if (!timeStr) return '--:--';
-    // Clean up timezone strings if returned by API (e.g. "04:32 (IST)")
     const cleanTime = timeStr.split(' ')[0];
     const [hourStr, minuteStr] = cleanTime.split(':');
     let hour = parseInt(hourStr, 10);
     const ampm = hour >= 12 ? 'PM' : 'AM';
     hour = hour % 12;
-    hour = hour ? hour : 12; // the hour '0' should be '12'
+    hour = hour ? hour : 12;
     return `${hour}:${minuteStr} ${ampm}`;
   };
 
-  // Fetch Prayer Times
   useEffect(() => {
     async function fetchPrayerTimes() {
       setLoadingPrayers(true);
@@ -59,7 +56,6 @@ export default function App() {
         
         if (timingsData.code === 200) {
           const raw = timingsData.data.timings;
-          // Format all times to 12-hour format
           const formatted = {
             Fajr: format12Hour(raw.Fajr),
             Sunrise: format12Hour(raw.Sunrise),
@@ -85,7 +81,6 @@ export default function App() {
     fetchPrayerTimes();
   }, [city, country]);
 
-  // GPS Location detector
   const handleDetectGPS = () => {
     if (!navigator.geolocation) {
       alert("Geolocation is not supported by your browser");
@@ -150,21 +145,21 @@ export default function App() {
   };
 
   return (
-    <div className={`min-h-screen ${isDarkMode ? 'bg-[#070b12] text-white' : 'bg-[#f8fafc] text-slate-900'} flex flex-col pb-28 select-none font-sans relative overflow-hidden transition-colors duration-500`}>
+    <div className={`min-h-screen ${isDarkMode ? 'bg-[#05080f] text-white' : 'bg-[#f1f5f9] text-slate-900'} flex flex-col pb-28 select-none font-sans relative overflow-hidden transition-colors duration-500`}>
       
       {/* Blurred Arabic Calligraphy Background Watermark */}
-      <div className="absolute inset-0 pointer-events-none opacity-[0.03] flex items-center justify-center overflow-hidden z-0">
+      <div className="absolute inset-0 pointer-events-none opacity-[0.025] flex items-center justify-center overflow-hidden z-0">
         <span className="text-[35vw] font-serif whitespace-nowrap select-none">بِسْمِ اللَّهِ</span>
       </div>
 
-      {/* iOS Frosted Glass Header */}
-      <header className={`${isDarkMode ? 'bg-[#070b12]/80 border-white/5' : 'bg-white/80 border-slate-200'} backdrop-blur-xl border-b p-4 sticky top-0 z-40 transition-colors`}>
+      {/* Glass Header */}
+      <header className={`${isDarkMode ? 'bg-[#070b12]/60 border-white/10' : 'bg-white/60 border-slate-200/60'} backdrop-blur-2xl border-b p-4 sticky top-0 z-40 transition-colors shadow-lg`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             {(currentTool || selectedSurah) && (
               <button 
                 onClick={() => { setCurrentTool(null); setSelectedSurah(null); }}
-                className={`w-9 h-9 rounded-full ${isDarkMode ? 'bg-white/10 text-[#34d399]' : 'bg-slate-100 text-emerald-600'} backdrop-blur-md flex items-center justify-center active:scale-90 transition-transform`}
+                className={`w-9 h-9 rounded-full ${isDarkMode ? 'bg-white/10 text-[#34d399] border-white/10' : 'bg-white text-emerald-600 border-slate-200'} backdrop-blur-md border flex items-center justify-center active:scale-90 transition-transform shadow-md`}
               >
                 <ArrowLeft size={18} />
               </button>
@@ -176,7 +171,7 @@ export default function App() {
               {!currentTool && !selectedSurah && (
                 <button 
                   onClick={() => setShowLocationModal(true)}
-                  className={`flex items-center gap-1.5 mt-0.5 ${isDarkMode ? 'bg-white/5 border-white/10 text-[#34d399]' : 'bg-slate-100 border-slate-200 text-emerald-700'} px-2.5 py-1 rounded-full border active:scale-95 transition-transform`}
+                  className={`flex items-center gap-1.5 mt-0.5 ${isDarkMode ? 'bg-white/10 border-white/15 text-[#34d399]' : 'bg-white border-slate-200 text-emerald-700'} px-3 py-1 rounded-full border backdrop-blur-xl active:scale-95 transition-transform shadow-sm`}
                 >
                   <MapPin size={12} />
                   <span className="text-[11px] font-medium">{city}</span>
@@ -186,17 +181,16 @@ export default function App() {
             </div>
           </div>
 
-          {/* Day/Night Theme Toggle Button */}
           <button 
             onClick={() => setIsDarkMode(!isDarkMode)}
-            className={`w-10 h-10 rounded-2xl ${isDarkMode ? 'bg-white/10 text-amber-400 border-white/10' : 'bg-slate-100 text-slate-700 border-slate-200'} backdrop-blur-md border flex items-center justify-center shadow-lg active:scale-90 transition-transform`}
+            className={`w-10 h-10 rounded-2xl ${isDarkMode ? 'bg-white/10 text-amber-400 border-white/15' : 'bg-white text-slate-700 border-slate-200'} backdrop-blur-xl border flex items-center justify-center shadow-lg active:scale-90 transition-transform`}
           >
             {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
           </button>
         </div>
       </header>
 
-      {/* Main Content Area */}
+      {/* Main Content */}
       <main className="p-4 flex-1 max-w-md mx-auto w-full z-10 relative">
         {selectedSurah ? (
           <SurahDetail surah={selectedSurah} isDarkMode={isDarkMode} />
@@ -225,10 +219,10 @@ export default function App() {
         )}
       </main>
 
-      {/* Location Selector Modal */}
+      {/* Location Modal */}
       {showLocationModal && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
-          <div className={`${isDarkMode ? 'bg-[#0f172a] border-white/10 text-white' : 'bg-white border-slate-200 text-slate-900'} border w-full max-w-sm rounded-[32px] p-6 space-y-4 shadow-2xl`}>
+          <div className={`${isDarkMode ? 'bg-[#0f172a]/90 border-white/15 text-white' : 'bg-white/90 border-slate-200 text-slate-900'} backdrop-blur-2xl border w-full max-w-sm rounded-[32px] p-6 space-y-4 shadow-2xl`}>
             <div className="flex justify-between items-center">
               <h3 className="text-base font-bold flex items-center gap-2">
                 <Globe size={18} className="text-[#34d399]" /> Set Location
@@ -239,7 +233,7 @@ export default function App() {
             <button
               onClick={handleDetectGPS}
               disabled={locatingGPS}
-              className="w-full bg-[#059669]/20 border border-[#34d399]/40 text-[#34d399] py-3 rounded-2xl text-xs font-bold flex items-center justify-center gap-2 active:scale-95 transition-all shadow-lg"
+              className="w-full bg-[#059669]/20 border border-[#34d399]/40 text-[#34d399] py-3 rounded-2xl text-xs font-bold flex items-center justify-center gap-2 active:scale-95 transition-all shadow-lg backdrop-blur-md"
             >
               <Navigation size={15} className={locatingGPS ? "animate-spin" : ""} />
               {locatingGPS ? 'Detecting GPS...' : 'Use Phone GPS Location'}
@@ -250,7 +244,7 @@ export default function App() {
                 <button
                   key={c}
                   onClick={() => handleSaveLocation(c, c === 'Mecca' ? 'Saudi Arabia' : c === 'London' ? 'UK' : c === 'Dubai' ? 'UAE' : 'India')}
-                  className={`py-2.5 px-3 rounded-2xl text-xs font-bold border transition-all ${city === c ? 'bg-[#059669]/30 border-[#34d399] text-[#34d399]' : isDarkMode ? 'bg-white/5 border-white/10 text-white/80' : 'bg-slate-50 border-slate-200 text-slate-700'}`}
+                  className={`py-2.5 px-3 rounded-2xl text-xs font-bold border backdrop-blur-md transition-all ${city === c ? 'bg-[#059669]/30 border-[#34d399] text-[#34d399]' : isDarkMode ? 'bg-white/5 border-white/10 text-white/80' : 'bg-slate-50 border-slate-200 text-slate-700'}`}
                 >
                   {c}
                 </button>
@@ -263,7 +257,7 @@ export default function App() {
                 placeholder="Or type custom city..."
                 value={tempCityInput}
                 onChange={(e) => setTempCityInput(e.target.value)}
-                className={`w-full ${isDarkMode ? 'bg-white/5 border-white/10 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'} border rounded-2xl px-4 py-3 text-xs focus:outline-none focus:border-[#34d399]`}
+                className={`w-full ${isDarkMode ? 'bg-white/5 border-white/10 text-white' : 'bg-slate-50 border-slate-200 text-slate-900'} backdrop-blur-md border rounded-2xl px-4 py-3 text-xs focus:outline-none focus:border-[#34d399]`}
               />
               <button
                 onClick={() => { if(tempCityInput.trim()) handleSaveLocation(tempCityInput.trim(), 'India'); }}
@@ -276,10 +270,10 @@ export default function App() {
         </div>
       )}
 
-      {/* Floating Glass Pill Bottom Navigation */}
+      {/* Floating Glass Bottom Navigation */}
       {!currentTool && !selectedSurah && (
         <div className="fixed bottom-4 left-4 right-4 z-40 flex justify-center">
-          <nav className={`${isDarkMode ? 'bg-[#0f172a]/80 border-white/10 shadow-black/60' : 'bg-white/80 border-slate-200 shadow-slate-300/60'} backdrop-blur-2xl border h-16 px-3 rounded-full flex justify-between items-center max-w-sm w-full shadow-2xl`}>
+          <nav className={`${isDarkMode ? 'bg-[#0f172a]/60 border-white/15 shadow-black/80' : 'bg-white/60 border-slate-200/80 shadow-slate-300/50'} backdrop-blur-2xl border h-16 px-3 rounded-full flex justify-between items-center max-w-sm w-full shadow-2xl`}>
             <NavItem icon={<Home size={20} />} label="Home" isActive={activeTab === 'home'} onClick={() => setActiveTab('home')} isDarkMode={isDarkMode} />
             <NavItem icon={<BookOpen size={20} />} label="Quran" isActive={activeTab === 'quran'} onClick={() => setActiveTab('quran')} isDarkMode={isDarkMode} />
             <NavItem icon={<Heart size={20} />} label="Dua" isActive={activeTab === 'dua'} onClick={() => setActiveTab('dua')} isDarkMode={isDarkMode} />
@@ -310,40 +304,66 @@ function NavItem({ icon, label, isActive, onClick, isDarkMode }) {
 function HomeScreen({ setActiveTab, setCurrentTool, prayerTimes, hijriDate, loadingPrayers, city, isDarkMode }) {
   return (
     <div className="space-y-4">
-      {/* Immersive Prayer Card with Sun Animation */}
-      <div className="bg-gradient-to-br from-[#059669]/95 via-[#047857]/95 to-[#065f46]/95 backdrop-blur-2xl p-5 rounded-[32px] shadow-2xl border border-white/15 relative overflow-hidden text-white">
+      
+      {/* 🌙 Separate Dedicated Ramazan / Fasting Card */}
+      <div className="bg-gradient-to-br from-[#065f46]/85 via-[#047857]/85 to-[#064e3b]/85 backdrop-blur-2xl p-5 rounded-[32px] shadow-2xl border border-white/20 relative overflow-hidden text-white">
+        <div className="absolute right-3 -bottom-4 w-32 h-32 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
         
-        {/* Animated Sun & Arc Simulation Background */}
-        <div className="absolute right-4 top-4 w-28 h-28 border border-white/10 rounded-full flex items-center justify-center pointer-events-none">
-          <div className="w-20 h-20 border border-dashed border-white/20 rounded-full animate-spin" style={{ animationDuration: '40s' }}></div>
-          <Sun className="absolute text-amber-300 animate-pulse" size={24} style={{ transform: 'translate(25px, -20px)' }} />
+        <div className="flex justify-between items-center mb-4 relative z-10">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-amber-300 border border-white/20">
+              <Moon size={16} />
+            </div>
+            <div>
+              <p className="text-white text-sm font-bold tracking-tight">Ramazan Fasting Guide</p>
+              <p className="text-[#a7f3d0] text-[10px]">Today's Sehri & Iftar Timings</p>
+            </div>
+          </div>
+          <span className="text-[10px] font-bold px-2.5 py-1 bg-white/20 backdrop-blur-md rounded-full border border-white/15">Active</span>
         </div>
 
-        <div className="relative z-10">
-          <div className="flex items-center gap-1.5 text-[#a7f3d0] text-[11px] font-bold uppercase tracking-wider">
-            <Calendar size={13} />
-            <span>{hijriDate || 'Loading Hijri date...'}</span>
+        <div className="grid grid-cols-2 gap-3 relative z-10">
+          {/* Sehri Card */}
+          <div className="bg-black/25 backdrop-blur-xl p-3.5 rounded-2xl border border-white/15 flex flex-col justify-between">
+            <span className="text-[#a7f3d0] text-[10px] font-bold uppercase tracking-wider">Sehri (Fajr Ends)</span>
+            <span className="text-white text-xl font-mono font-bold mt-1">{loadingPrayers ? '...' : prayerTimes?.Fajr || '04:32 AM'}</span>
+            <span className="text-[9px] text-white/60 mt-0.5">Suhoor Blessing</span>
           </div>
-          <h2 className="text-white text-2xl font-bold mt-2 tracking-tight">{city}</h2>
-          <p className="text-[#ecfdf5] text-xs mt-0.5 opacity-90">Live Islamic Daily Schedule</p>
-        </div>
 
-        <div className="mt-6 pt-4 border-t border-white/20 flex justify-between items-center text-xs text-[#ecfdf5] font-medium relative z-10">
-          <div className="flex items-center gap-1.5 bg-black/20 px-3 py-1.5 rounded-xl border border-white/10">
-            <Sun size={14} className="text-amber-300" />
-            <span>Sunrise: {prayerTimes?.Sunrise || '05:55 AM'}</span>
-          </div>
-          <div className="flex items-center gap-1.5 bg-black/20 px-3 py-1.5 rounded-xl border border-white/10">
-            <Moon size={14} className="text-indigo-200" />
-            <span>Sunset: {prayerTimes?.Sunset || '07:12 PM'}</span>
+          {/* Iftar Card */}
+          <div className="bg-black/25 backdrop-blur-xl p-3.5 rounded-2xl border border-white/15 flex flex-col justify-between">
+            <span className="text-amber-300 text-[10px] font-bold uppercase tracking-wider">Iftar (Maghrib)</span>
+            <span className="text-white text-xl font-mono font-bold mt-1">{loadingPrayers ? '...' : prayerTimes?.Maghrib || '07:12 PM'}</span>
+            <span className="text-[9px] text-white/60 mt-0.5">Fast Opening</span>
           </div>
         </div>
       </div>
 
-      {/* Prayer Times List */}
-      <div className={`${isDarkMode ? 'bg-white/[0.04] border-white/10' : 'bg-white border-slate-200 shadow-xl'} backdrop-blur-xl p-4 rounded-[28px] border space-y-3 transition-colors`}>
+      {/* Sun / Prayer Timing Card */}
+      <div className={`${isDarkMode ? 'bg-white/[0.05] border-white/15' : 'bg-white/80 border-slate-200/80 shadow-xl'} backdrop-blur-2xl p-5 rounded-[32px] border relative overflow-hidden transition-colors`}>
+        <div className="flex justify-between items-start">
+          <div>
+            <div className="flex items-center gap-1.5 text-[#34d399] text-[11px] font-bold uppercase tracking-wider">
+              <Calendar size={13} />
+              <span>{hijriDate || 'Loading Hijri date...'}</span>
+            </div>
+            <h2 className={`text-xl font-bold mt-1 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{city} Schedule</h2>
+          </div>
+          <div className={`${isDarkMode ? 'bg-white/10 border-white/15' : 'bg-slate-100 border-slate-200'} p-2.5 rounded-2xl backdrop-blur-md border`}>
+            <Clock className="text-[#34d399]" size={20} />
+          </div>
+        </div>
+
+        <div className={`mt-4 pt-3.5 border-t ${isDarkMode ? 'border-white/10 text-white/80' : 'border-slate-100 text-slate-700'} flex justify-between items-center text-xs font-medium`}>
+          <span>Sunrise: {prayerTimes?.Sunrise || '05:55 AM'}</span>
+          <span>Sunset: {prayerTimes?.Sunset || '07:12 PM'}</span>
+        </div>
+      </div>
+
+      {/* Daily Prayers Glass List */}
+      <div className={`${isDarkMode ? 'bg-white/[0.04] border-white/10' : 'bg-white/70 border-slate-200/80 shadow-xl'} backdrop-blur-2xl p-4 rounded-[28px] border space-y-3 transition-colors`}>
         <div className="flex justify-between items-center pb-2 border-b border-white/5">
-          <span className={`text-xs font-bold ${isDarkMode ? 'text-white/50' : 'text-slate-400'} uppercase tracking-wider`}>Today's Schedule ({city})</span>
+          <span className={`text-xs font-bold ${isDarkMode ? 'text-white/50' : 'text-slate-400'} uppercase tracking-wider`}>Prayer Timings</span>
           <Bell size={14} className="text-[#34d399]" />
         </div>
         {loadingPrayers ? (
@@ -357,7 +377,7 @@ function HomeScreen({ setActiveTab, setCurrentTool, prayerTimes, hijriDate, load
               { name: 'Maghrib', time: prayerTimes?.Maghrib },
               { name: 'Isha', time: prayerTimes?.Isha },
             ].map((p, idx) => (
-              <div key={idx} className={`flex justify-between items-center p-3 rounded-2xl transition-all ${idx === 1 ? 'bg-[#059669]/30 border border-[#34d399]/40 shadow-lg' : isDarkMode ? 'bg-white/[0.02] border-white/5' : 'bg-slate-50 border-slate-100'}`}>
+              <div key={idx} className={`flex justify-between items-center p-3 rounded-2xl backdrop-blur-md transition-all ${idx === 1 ? 'bg-[#059669]/30 border border-[#34d399]/40 shadow-lg' : isDarkMode ? 'bg-white/[0.02] border-white/5' : 'bg-white/50 border-slate-100'}`}>
                 <span className={`text-xs font-bold ${idx === 1 ? 'text-[#34d399]' : isDarkMode ? 'text-white/90' : 'text-slate-700'}`}>{p.name}</span>
                 <span className={`text-xs font-mono ${idx === 1 ? 'text-[#34d399] font-bold' : isDarkMode ? 'text-white/70' : 'text-slate-600'}`}>{p.time || '--:--'}</span>
               </div>
@@ -366,30 +386,30 @@ function HomeScreen({ setActiveTab, setCurrentTool, prayerTimes, hijriDate, load
         )}
       </div>
 
-      {/* Quick Cards */}
+      {/* Quick Navigation Cards */}
       <div className="grid grid-cols-2 gap-3">
-        <div onClick={() => setActiveTab('quran')} className={`${isDarkMode ? 'bg-white/[0.04] border-white/10' : 'bg-white border-slate-200 shadow-xl'} backdrop-blur-xl p-4 rounded-[28px] border cursor-pointer active:scale-95 transition-transform`}>
+        <div onClick={() => setActiveTab('quran')} className={`${isDarkMode ? 'bg-white/[0.04] border-white/10' : 'bg-white/70 border-slate-200/80 shadow-xl'} backdrop-blur-2xl p-4 rounded-[28px] border cursor-pointer active:scale-95 transition-transform`}>
           <div className="w-10 h-10 rounded-2xl bg-[#34d399]/15 flex items-center justify-center text-[#34d399] mb-3 border border-[#34d399]/20">
             <BookOpen size={20} />
           </div>
           <p className={`text-sm font-bold tracking-tight ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Al-Quran</p>
           <p className={`text-[10px] mt-0.5 ${isDarkMode ? 'text-white/50' : 'text-slate-500'}`}>Read 114 Surahs</p>
         </div>
-        <div onClick={() => setCurrentTool('tasbih')} className={`${isDarkMode ? 'bg-white/[0.04] border-white/10' : 'bg-white border-slate-200 shadow-xl'} backdrop-blur-xl p-4 rounded-[28px] border cursor-pointer active:scale-95 transition-transform`}>
+        <div onClick={() => setCurrentTool('tasbih')} className={`${isDarkMode ? 'bg-white/[0.04] border-white/10' : 'bg-white/70 border-slate-200/80 shadow-xl'} backdrop-blur-2xl p-4 rounded-[28px] border cursor-pointer active:scale-95 transition-transform`}>
           <div className="w-10 h-10 rounded-2xl bg-[#34d399]/15 flex items-center justify-center text-[#34d399] mb-3 border border-[#34d399]/20">
             <RotateCcw size={20} />
           </div>
           <p className={`text-sm font-bold tracking-tight ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Digital Tasbih</p>
           <p className={`text-[10px] mt-0.5 ${isDarkMode ? 'text-white/50' : 'text-slate-500'}`}>Count daily Zikr</p>
         </div>
-        <div onClick={() => setActiveTab('qibla')} className={`${isDarkMode ? 'bg-white/[0.04] border-white/10' : 'bg-white border-slate-200 shadow-xl'} backdrop-blur-xl p-4 rounded-[28px] border cursor-pointer active:scale-95 transition-transform`}>
+        <div onClick={() => setActiveTab('qibla')} className={`${isDarkMode ? 'bg-white/[0.04] border-white/10' : 'bg-white/70 border-slate-200/80 shadow-xl'} backdrop-blur-2xl p-4 rounded-[28px] border cursor-pointer active:scale-95 transition-transform`}>
           <div className="w-10 h-10 rounded-2xl bg-[#34d399]/15 flex items-center justify-center text-[#34d399] mb-3 border border-[#34d399]/20">
             <Compass size={20} />
           </div>
           <p className={`text-sm font-bold tracking-tight ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Qibla Direction</p>
           <p className={`text-[10px] mt-0.5 ${isDarkMode ? 'text-white/50' : 'text-slate-500'}`}>Kaaba compass</p>
         </div>
-        <div onClick={() => setCurrentTool('asma')} className={`${isDarkMode ? 'bg-white/[0.04] border-white/10' : 'bg-white border-slate-200 shadow-xl'} backdrop-blur-xl p-4 rounded-[28px] border cursor-pointer active:scale-95 transition-transform`}>
+        <div onClick={() => setCurrentTool('asma')} className={`${isDarkMode ? 'bg-white/[0.04] border-white/10' : 'bg-white/70 border-slate-200/80 shadow-xl'} backdrop-blur-2xl p-4 rounded-[28px] border cursor-pointer active:scale-95 transition-transform`}>
           <div className="w-10 h-10 rounded-2xl bg-[#34d399]/15 flex items-center justify-center text-[#34d399] mb-3 border border-[#34d399]/20">
             <Heart size={20} />
           </div>
@@ -421,7 +441,7 @@ function QuranScreen({ isDownloaded, downloading, downloadFullQuran, setSelected
           </button>
         </div>
       ) : (
-        <div className={`${isDarkMode ? 'bg-white/[0.04] border-white/10' : 'bg-white border-slate-200'} backdrop-blur-xl p-3.5 rounded-[24px] flex items-center gap-2.5 border shadow-lg`}>
+        <div className={`${isDarkMode ? 'bg-white/[0.04] border-white/10' : 'bg-white/70 border-slate-200'} backdrop-blur-2xl p-3.5 rounded-[24px] flex items-center gap-2.5 border shadow-lg`}>
           <CheckCircle size={16} className="text-[#34d399]" />
           <p className="text-[#34d399] text-xs font-bold">Quran saved offline successfully!</p>
         </div>
@@ -434,7 +454,7 @@ function QuranScreen({ isDownloaded, downloading, downloadFullQuran, setSelected
           placeholder="Search Surah..." 
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className={`w-full ${isDarkMode ? 'bg-white/[0.04] border-white/10 text-white placeholder-white/30' : 'bg-white border-slate-200 text-slate-900 placeholder-slate-400'} backdrop-blur-xl pl-11 pr-4 py-3 rounded-2xl text-xs border focus:outline-none focus:border-[#34d399] shadow-inner`}
+          className={`w-full ${isDarkMode ? 'bg-white/[0.04] border-white/10 text-white placeholder-white/30' : 'bg-white/70 border-slate-200 text-slate-900 placeholder-slate-400'} backdrop-blur-2xl pl-11 pr-4 py-3 rounded-2xl text-xs border focus:outline-none focus:border-[#34d399] shadow-inner`}
         />
       </div>
 
@@ -443,7 +463,7 @@ function QuranScreen({ isDownloaded, downloading, downloadFullQuran, setSelected
         <div 
           key={surah.no} 
           onClick={() => setSelectedSurah(surah)}
-          className={`${isDarkMode ? 'bg-white/[0.04] border-white/10' : 'bg-white border-slate-200 shadow-xl'} backdrop-blur-xl p-4 rounded-[24px] border flex justify-between items-center cursor-pointer active:scale-[0.99] transition-transform`}
+          className={`${isDarkMode ? 'bg-white/[0.04] border-white/10' : 'bg-white/70 border-slate-200 shadow-xl'} backdrop-blur-2xl p-4 rounded-[24px] border flex justify-between items-center cursor-pointer active:scale-[0.99] transition-transform`}
         >
           <div className="flex items-center gap-3.5">
             <div className="w-10 h-10 rounded-2xl bg-[#34d399]/15 flex items-center justify-center text-[#34d399] text-xs font-bold border border-[#34d399]/20">{surah.no}</div>
@@ -468,7 +488,7 @@ function SurahDetail({ surah, isDarkMode }) {
         <p className="text-[#ecfdf5] text-3xl font-bold mt-3">{surah.arabic}</p>
       </div>
       {surah.verses.map(v => (
-        <div key={v.id} className={`${isDarkMode ? 'bg-white/[0.04] border-white/10' : 'bg-white border-slate-200 shadow-xl'} backdrop-blur-xl p-4 rounded-[24px] border space-y-2.5`}>
+        <div key={v.id} className={`${isDarkMode ? 'bg-white/[0.04] border-white/10' : 'bg-white/70 border-slate-200 shadow-xl'} backdrop-blur-2xl p-4 rounded-[24px] border space-y-2.5`}>
           <div className="flex justify-between items-center">
             <span className="text-[#34d399] text-[10px] font-bold px-2.5 py-1 bg-[#34d399]/15 rounded-xl border border-[#34d399]/20">Ayah {v.id}</span>
             <div className={`flex gap-3 ${isDarkMode ? 'text-white/40' : 'text-slate-400'}`}>
@@ -493,7 +513,7 @@ function DuaScreen({ isDarkMode }) {
     <div className="space-y-3">
       <p className={`text-[11px] font-bold uppercase tracking-wider px-1 ${isDarkMode ? 'text-white/40' : 'text-slate-400'}`}>Hisnul Muslim Duas</p>
       {duas.map((d, i) => (
-        <div key={i} className={`${isDarkMode ? 'bg-white/[0.04] border-white/10' : 'bg-white border-slate-200 shadow-xl'} backdrop-blur-xl p-4 rounded-[24px] border space-y-2.5`}>
+        <div key={i} className={`${isDarkMode ? 'bg-white/[0.04] border-white/10' : 'bg-white/70 border-slate-200 shadow-xl'} backdrop-blur-2xl p-4 rounded-[24px] border space-y-2.5`}>
           <p className={`text-sm font-bold tracking-tight ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{d.title}</p>
           <p className={`text-lg text-right font-bold leading-relaxed ${isDarkMode ? 'text-[#ecfdf5]' : 'text-slate-900'}`}>{d.arabic}</p>
           <p className={`text-xs leading-normal ${isDarkMode ? 'text-white/70' : 'text-slate-600'}`}>{d.meaning}</p>
@@ -506,7 +526,7 @@ function DuaScreen({ isDarkMode }) {
 function QiblaScreen({ city, isDarkMode }) {
   return (
     <div className="flex flex-col items-center justify-center py-20">
-      <div className={`w-32 h-32 rounded-full ${isDarkMode ? 'bg-white/[0.04] border-white/10' : 'bg-white border-slate-200 shadow-2xl'} backdrop-blur-2xl border flex items-center justify-center relative`}>
+      <div className={`w-32 h-32 rounded-full ${isDarkMode ? 'bg-white/[0.04] border-white/10' : 'bg-white/70 border-slate-200 shadow-2xl'} backdrop-blur-2xl border flex items-center justify-center relative`}>
         <div className="absolute inset-0 rounded-full border border-[#34d399]/30 animate-ping opacity-25"></div>
         <Compass size={64} className="text-[#34d399]" />
       </div>
@@ -519,14 +539,14 @@ function QiblaScreen({ city, isDarkMode }) {
 function MoreScreen({ setCurrentTool, isDarkMode }) {
   return (
     <div className="space-y-3">
-      <div onClick={() => setCurrentTool('tasbih')} className={`${isDarkMode ? 'bg-white/[0.04] border-white/10' : 'bg-white border-slate-200 shadow-xl'} backdrop-blur-xl p-4 rounded-[24px] border cursor-pointer flex items-center justify-between`}>
+      <div onClick={() => setCurrentTool('tasbih')} className={`${isDarkMode ? 'bg-white/[0.04] border-white/10' : 'bg-white/70 border-slate-200 shadow-xl'} backdrop-blur-2xl p-4 rounded-[24px] border cursor-pointer flex items-center justify-between`}>
         <div>
           <p className={`text-sm font-bold tracking-tight ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Digital Tasbih Counter</p>
           <p className={`text-[11px] mt-0.5 ${isDarkMode ? 'text-white/50' : 'text-slate-500'}`}>Count daily Zikr</p>
         </div>
         <RotateCcw className="text-[#34d399]" size={20} />
       </div>
-      <div onClick={() => setCurrentTool('asma')} className={`${isDarkMode ? 'bg-white/[0.04] border-white/10' : 'bg-white border-slate-200 shadow-xl'} backdrop-blur-xl p-4 rounded-[24px] border cursor-pointer flex items-center justify-between`}>
+      <div onClick={() => setCurrentTool('asma')} className={`${isDarkMode ? 'bg-white/[0.04] border-white/10' : 'bg-white/70 border-slate-200 shadow-xl'} backdrop-blur-2xl p-4 rounded-[24px] border cursor-pointer flex items-center justify-between`}>
         <div>
           <p className={`text-sm font-bold tracking-tight ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Asma-ul-Husna (99 Names)</p>
           <p className={`text-[11px] mt-0.5 ${isDarkMode ? 'text-white/50' : 'text-slate-500'}`}>Learn beautiful names</p>
@@ -551,7 +571,7 @@ function TasbihView({ isDarkMode }) {
         <span className="text-[#a7f3d0] text-[10px] font-bold mt-1 tracking-widest uppercase">TAP WATER DROP</span>
       </div>
 
-      <button onClick={() => setCount(0)} className={`flex items-center gap-1.5 ${isDarkMode ? 'bg-white/[0.04] border-white/10 text-[#f43f5e]' : 'bg-white border-slate-200 text-rose-600 shadow-xl'} backdrop-blur-xl px-5 py-3 rounded-2xl text-xs font-bold border active:scale-95`}>
+      <button onClick={() => setCount(0)} className={`flex items-center gap-1.5 ${isDarkMode ? 'bg-white/[0.04] border-white/10 text-[#f43f5e]' : 'bg-white/70 border-slate-200 text-rose-600 shadow-xl'} backdrop-blur-2xl px-5 py-3 rounded-2xl text-xs font-bold border active:scale-95`}>
         <RotateCcw size={14} /> Reset Counter
       </button>
     </div>
@@ -567,7 +587,7 @@ function AsmaulHusnaView({ isDarkMode }) {
     <div className="space-y-3">
       <p className={`text-[11px] font-bold uppercase tracking-wider px-1 ${isDarkMode ? 'text-white/40' : 'text-slate-400'}`}>99 Names of Allah</p>
       {names.map(n => (
-        <div key={n.no} className={`${isDarkMode ? 'bg-white/[0.04] border-white/10' : 'bg-white border-slate-200 shadow-xl'} backdrop-blur-xl p-4 rounded-[24px] border flex justify-between items-center`}>
+        <div key={n.no} className={`${isDarkMode ? 'bg-white/[0.04] border-white/10' : 'bg-white/70 border-slate-200 shadow-xl'} backdrop-blur-2xl p-4 rounded-[24px] border flex justify-between items-center`}>
           <div className="flex items-center gap-3.5">
             <div className="w-9 h-9 rounded-2xl bg-[#34d399]/15 flex items-center justify-center text-[#34d399] text-xs font-bold border border-[#34d399]/20">{n.no}</div>
             <div>
