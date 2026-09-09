@@ -23,7 +23,6 @@ export default function App() {
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date());
 
-  // Update live clock every second
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
@@ -48,6 +47,7 @@ export default function App() {
     const cleanTime = timeStr.split(' ')[0];
     const [hourStr, minuteStr] = cleanTime.split(':');
     let hour = parseInt(hourStr, 10);
+    if (isNaN(hour)) return timeStr;
     const ampm = hour >= 12 ? 'PM' : 'AM';
     hour = hour % 12;
     hour = hour ? hour : 12;
@@ -58,6 +58,7 @@ export default function App() {
     if (!timeStr) return '--:--';
     const cleanTime = timeStr.split(' ')[0];
     const [h, m] = cleanTime.split(':').map(Number);
+    if (isNaN(h) || isNaN(m)) return timeStr;
     const date = new Date();
     date.setHours(h, m + minutesToAdd);
     let hh = date.getHours();
@@ -176,12 +177,10 @@ export default function App() {
   return (
     <div className={`min-h-screen ${isDarkMode ? 'bg-[#05080f] text-white' : 'bg-[#f1f5f9] text-slate-900'} flex flex-col pb-28 select-none font-sans relative overflow-hidden transition-colors duration-500`}>
       
-      {/* Blurred Arabic Calligraphy Background Watermark */}
       <div className="absolute inset-0 pointer-events-none opacity-[0.025] flex items-center justify-center overflow-hidden z-0">
         <span className="text-[35vw] font-serif whitespace-nowrap select-none">بِسْمِ اللَّهِ</span>
       </div>
 
-      {/* Glass Header */}
       <header className={`${isDarkMode ? 'bg-[#070b12]/60 border-white/10' : 'bg-white/60 border-slate-200/60'} backdrop-blur-2xl border-b p-4 sticky top-0 z-40 transition-colors shadow-lg`}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -219,7 +218,6 @@ export default function App() {
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="p-4 flex-1 max-w-md mx-auto w-full z-10 relative">
         {selectedSurah ? (
           <SurahDetail surah={selectedSurah} isDarkMode={isDarkMode} />
@@ -248,7 +246,6 @@ export default function App() {
         )}
       </main>
 
-      {/* Location Modal */}
       {showLocationModal && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
           <div className={`${isDarkMode ? 'bg-[#0f172a]/90 border-white/15 text-white' : 'bg-white/90 border-slate-200 text-slate-900'} backdrop-blur-2xl border w-full max-w-sm rounded-[32px] p-6 space-y-4 shadow-2xl`}>
@@ -299,7 +296,6 @@ export default function App() {
         </div>
       )}
 
-      {/* Floating Glass Bottom Navigation */}
       {!currentTool && !selectedSurah && (
         <div className="fixed bottom-4 left-4 right-4 z-40 flex justify-center">
           <nav className={`${isDarkMode ? 'bg-[#0f172a]/60 border-white/15 shadow-black/80' : 'bg-white/60 border-slate-200/80 shadow-slate-300/50'} backdrop-blur-2xl border h-16 px-3 rounded-full flex justify-between items-center max-w-sm w-full shadow-2xl`}>
@@ -332,10 +328,11 @@ function NavItem({ icon, label, isActive, onClick, isDarkMode }) {
 
 function HomeScreen({ setActiveTab, setCurrentTool, prayerTimes, hijriDate, loadingPrayers, city, isDarkMode, currentTime }) {
   
-  // Helper to parse time string (e.g. "04:32 AM") into minutes from midnight for comparison
   const parseTimeToMinutes = (timeStr) => {
     if (!timeStr) return 0;
-    const [time, modifier] = timeStr.split(' ');
+    const parts = timeStr.split(' ');
+    if (parts.length < 2) return 0;
+    const [time, modifier] = parts;
     let [hours, minutes] = time.split(':').map(Number);
     if (modifier === 'PM' && hours < 12) hours += 12;
     if (modifier === 'AM' && hours === 12) hours = 0;
@@ -344,7 +341,6 @@ function HomeScreen({ setActiveTab, setCurrentTool, prayerTimes, hijriDate, load
 
   const currentMinutes = currentTime.getHours() * 60 + currentTime.getMinutes();
 
-  // Determine current active slot & Do's / Don'ts
   let activePrayer = 'Dhuhr';
   let dosText = "Engage in Dhikr, Quran recitation, and daily lawful work.";
   let dontsText = "Avoid wasting time in idle talk or missing prayer slots.";
@@ -359,11 +355,11 @@ function HomeScreen({ setActiveTab, setCurrentTool, prayerTimes, hijriDate, load
 
     if (currentMinutes >= fajrMin - 30 && currentMinutes < fajrMin) {
       activePrayer = 'Sehri / Fajr Prep';
-      dosText = "Finish Sehri before Fajrazan; make Niyyah for fasting.";
+      dosText = "Finish Sehri before Fajr; make Niyyah for fasting.";
       dontsText = "Do not eat or drink after Fajr timing starts.";
     } else if (currentMinutes >= fajrMin && currentMinutes < fajrMin + 90) {
       activePrayer = 'Fajr';
-      dosText = "Offer 2 Rakat Sunnah and 2 Rakat Fardh; recite Morning Azkar.";
+      dosText = "Offer 2 Rakat Sunnah & 2 Rakat Fardh; recite Morning Azkar.";
       dontsText = "Do not sleep immediately after Fajr until sunrise.";
     } else if (currentMinutes >= zawaalMin - 15 && currentMinutes <= zawaalMin + 15) {
       activePrayer = 'Zawaal';
@@ -383,14 +379,13 @@ function HomeScreen({ setActiveTab, setCurrentTool, prayerTimes, hijriDate, load
   return (
     <div className="space-y-4">
       
-      {/* 🌟 Top Small Dynamic Do's & Don'ts Popup Ticker */}
       <div className="bg-gradient-to-r from-[#065f46]/90 via-[#047857]/90 to-[#0f172a]/90 backdrop-blur-2xl p-3.5 rounded-2xl border border-white/20 shadow-xl text-white space-y-1.5 animate-pulse">
         <div className="flex items-center justify-between">
           <span className="text-[10px] font-bold uppercase tracking-wider text-[#a7f3d0] flex items-center gap-1">
             <Sparkles size={12} /> Live Guidance ({activePrayer})
           </span>
           <span className="text-[9px] font-mono bg-black/30 px-2 py-0.5 rounded-full text-white/80">
-            {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}
           </span>
         </div>
         <div className="grid grid-cols-2 gap-2 text-[11px] pt-1 border-t border-white/15">
@@ -405,7 +400,6 @@ function HomeScreen({ setActiveTab, setCurrentTool, prayerTimes, hijriDate, load
         </div>
       </div>
 
-      {/* Ramazan & Fasting Card */}
       <div className="bg-gradient-to-br from-[#065f46]/85 via-[#047857]/85 to-[#064e3b]/85 backdrop-blur-2xl p-5 rounded-[32px] shadow-2xl border border-white/20 relative overflow-hidden text-white">
         <div className="absolute right-3 -bottom-4 w-32 h-32 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
         
@@ -437,7 +431,6 @@ function HomeScreen({ setActiveTab, setCurrentTool, prayerTimes, hijriDate, load
         </div>
       </div>
 
-      {/* Main Prayer Schedule Card */}
       <div className={`${isDarkMode ? 'bg-white/[0.05] border-white/15' : 'bg-white/80 border-slate-200/80 shadow-xl'} backdrop-blur-2xl p-5 rounded-[32px] border relative overflow-hidden transition-colors`}>
         <div className="flex justify-between items-start">
           <div>
@@ -458,10 +451,9 @@ function HomeScreen({ setActiveTab, setCurrentTool, prayerTimes, hijriDate, load
         </div>
       </div>
 
-      {/* Daily Prayers Glass List (With Active Clock Highlighting) */}
       <div className={`${isDarkMode ? 'bg-white/[0.04] border-white/10' : 'bg-white/70 border-slate-200/80 shadow-xl'} backdrop-blur-2xl p-4 rounded-[28px] border space-y-3 transition-colors`}>
         <div className="flex justify-between items-center pb-2 border-b border-white/5">
-          <span className={`text-xs font-bold ${isDarkMode ? 'text-white/50' : 'text-slate-400'} uppercase tracking-wider`}>Daily Prayers (Clock Aligned)</span>
+          <span className={`text-xs font-bold ${isDarkMode ? 'text-white/50' : 'text-slate-400'} uppercase tracking-wider`}>Daily Prayers (12-hr Format)</span>
           <Bell size={14} className="text-[#34d399]" />
         </div>
         {loadingPrayers ? (
@@ -490,7 +482,6 @@ function HomeScreen({ setActiveTab, setCurrentTool, prayerTimes, hijriDate, load
         )}
       </div>
 
-      {/* Special Islamic Timings Card */}
       <div className={`${isDarkMode ? 'bg-white/[0.04] border-white/10' : 'bg-white/70 border-slate-200/80 shadow-xl'} backdrop-blur-2xl p-4 rounded-[28px] border space-y-3 transition-colors`}>
         <div className="flex justify-between items-center pb-2 border-b border-white/5">
           <span className={`text-xs font-bold ${isDarkMode ? 'text-white/50' : 'text-slate-400'} uppercase tracking-wider flex items-center gap-1.5`}>
@@ -517,7 +508,6 @@ function HomeScreen({ setActiveTab, setCurrentTool, prayerTimes, hijriDate, load
         </div>
       </div>
 
-      {/* Quick Navigation Cards */}
       <div className="grid grid-cols-2 gap-3">
         <div onClick={() => setActiveTab('quran')} className={`${isDarkMode ? 'bg-white/[0.04] border-white/10' : 'bg-white/70 border-slate-200/80 shadow-xl'} backdrop-blur-2xl p-4 rounded-[28px] border cursor-pointer active:scale-95 transition-transform`}>
           <div className="w-10 h-10 rounded-2xl bg-[#34d399]/15 flex items-center justify-center text-[#34d399] mb-3 border border-[#34d399]/20">
