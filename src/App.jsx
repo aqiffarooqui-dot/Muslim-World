@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Home, BookOpen, Heart, Compass, Menu, RotateCcw, Download, CheckCircle, ArrowLeft, RefreshCw, Search, Volume2, Bookmark, Clock, MapPin, Calendar, Bell, Globe, Navigation, Sun, Moon, Sparkles } from 'lucide-react';
+import { Home, BookOpen, Heart, Compass, Menu, RotateCcw, Download, CheckCircle, ArrowLeft, RefreshCw, Search, Volume2, Bookmark, Clock, MapPin, Calendar, Bell, Globe, Navigation, Sun, Moon, Sparkles, AlertCircle } from 'lucide-react';
 import { surahsList } from './data/quranData';
 
 export default function App() {
@@ -47,6 +47,21 @@ export default function App() {
     return `${hour}:${minuteStr} ${ampm}`;
   };
 
+  // Helper to add/subtract minutes for special Islamic timings estimation
+  const adjustTime = (timeStr, minutesToAdd) => {
+    if (!timeStr) return '--:--';
+    const cleanTime = timeStr.split(' ')[0];
+    const [h, m] = cleanTime.split(':').map(Number);
+    const date = new Date();
+    date.setHours(h, m + minutesToAdd);
+    let hh = date.getHours();
+    const mm = String(date.getMinutes()).padStart(2, '0');
+    const ampm = hh >= 12 ? 'PM' : 'AM';
+    hh = hh % 12;
+    hh = hh ? hh : 12;
+    return `${hh}:${mm} ${ampm}`;
+  };
+
   useEffect(() => {
     async function fetchPrayerTimes() {
       setLoadingPrayers(true);
@@ -56,6 +71,8 @@ export default function App() {
         
         if (timingsData.code === 200) {
           const raw = timingsData.data.timings;
+          
+          // Calculate special extended timings
           const formatted = {
             Fajr: format12Hour(raw.Fajr),
             Sunrise: format12Hour(raw.Sunrise),
@@ -64,14 +81,22 @@ export default function App() {
             Maghrib: format12Hour(raw.Maghrib),
             Sunset: format12Hour(raw.Sunset),
             Isha: format12Hour(raw.Isha),
+            // Special Islamic Timings
+            SehriEnd: format12Hour(raw.Fajr),
+            Ishraq: adjustTime(raw.Sunrise, 20),
+            Chasht: adjustTime(raw.Sunrise, 120),
+            Zawaal: adjustTime(raw.Dhuhr, -15),
+            Tahajjud: "03:15 AM" // Approximate last third of night
           };
+          
           setPrayerTimes(formatted);
           const h = timingsData.data.date.hijri;
           setHijriDate(`${h.day} ${h.month.en} ${h.year} AH`);
         }
       } catch (e) {
         setPrayerTimes({
-          Fajr: "04:32 AM", Sunrise: "05:55 AM", Dhuhr: "12:28 PM", Asr: "04:54 PM", Maghrib: "07:12 PM", Sunset: "07:12 PM", Isha: "08:35 PM"
+          Fajr: "04:32 AM", Sunrise: "05:55 AM", Dhuhr: "12:28 PM", Asr: "04:54 PM", Maghrib: "07:12 PM", Sunset: "07:12 PM", Isha: "08:35 PM",
+          SehriEnd: "04:32 AM", Ishraq: "06:15 AM", Chasht: "08:00 AM", Zawaal: "12:13 PM", Tahajjud: "03:15 AM"
         });
         setHijriDate("27 Safar 1448 AH");
       } finally {
@@ -305,7 +330,7 @@ function HomeScreen({ setActiveTab, setCurrentTool, prayerTimes, hijriDate, load
   return (
     <div className="space-y-4">
       
-      {/* 🌙 Separate Dedicated Ramazan / Fasting Card */}
+      {/* Ramazan & Fasting Card */}
       <div className="bg-gradient-to-br from-[#065f46]/85 via-[#047857]/85 to-[#064e3b]/85 backdrop-blur-2xl p-5 rounded-[32px] shadow-2xl border border-white/20 relative overflow-hidden text-white">
         <div className="absolute right-3 -bottom-4 w-32 h-32 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
         
@@ -323,23 +348,21 @@ function HomeScreen({ setActiveTab, setCurrentTool, prayerTimes, hijriDate, load
         </div>
 
         <div className="grid grid-cols-2 gap-3 relative z-10">
-          {/* Sehri Card */}
           <div className="bg-black/25 backdrop-blur-xl p-3.5 rounded-2xl border border-white/15 flex flex-col justify-between">
-            <span className="text-[#a7f3d0] text-[10px] font-bold uppercase tracking-wider">Sehri (Fajr Ends)</span>
-            <span className="text-white text-xl font-mono font-bold mt-1">{loadingPrayers ? '...' : prayerTimes?.Fajr || '04:32 AM'}</span>
-            <span className="text-[9px] text-white/60 mt-0.5">Suhoor Blessing</span>
+            <span className="text-[#a7f3d0] text-[10px] font-bold uppercase tracking-wider">Sehri End</span>
+            <span className="text-white text-xl font-mono font-bold mt-1">{loadingPrayers ? '...' : prayerTimes?.SehriEnd || '04:32 AM'}</span>
+            <span className="text-[9px] text-white/60 mt-0.5">Suhoor limit</span>
           </div>
 
-          {/* Iftar Card */}
           <div className="bg-black/25 backdrop-blur-xl p-3.5 rounded-2xl border border-white/15 flex flex-col justify-between">
-            <span className="text-amber-300 text-[10px] font-bold uppercase tracking-wider">Iftar (Maghrib)</span>
+            <span className="text-amber-300 text-[10px] font-bold uppercase tracking-wider">Iftar Time</span>
             <span className="text-white text-xl font-mono font-bold mt-1">{loadingPrayers ? '...' : prayerTimes?.Maghrib || '07:12 PM'}</span>
             <span className="text-[9px] text-white/60 mt-0.5">Fast Opening</span>
           </div>
         </div>
       </div>
 
-      {/* Sun / Prayer Timing Card */}
+      {/* Main Prayer Schedule Card */}
       <div className={`${isDarkMode ? 'bg-white/[0.05] border-white/15' : 'bg-white/80 border-slate-200/80 shadow-xl'} backdrop-blur-2xl p-5 rounded-[32px] border relative overflow-hidden transition-colors`}>
         <div className="flex justify-between items-start">
           <div>
@@ -363,11 +386,11 @@ function HomeScreen({ setActiveTab, setCurrentTool, prayerTimes, hijriDate, load
       {/* Daily Prayers Glass List */}
       <div className={`${isDarkMode ? 'bg-white/[0.04] border-white/10' : 'bg-white/70 border-slate-200/80 shadow-xl'} backdrop-blur-2xl p-4 rounded-[28px] border space-y-3 transition-colors`}>
         <div className="flex justify-between items-center pb-2 border-b border-white/5">
-          <span className={`text-xs font-bold ${isDarkMode ? 'text-white/50' : 'text-slate-400'} uppercase tracking-wider`}>Prayer Timings</span>
+          <span className={`text-xs font-bold ${isDarkMode ? 'text-white/50' : 'text-slate-400'} uppercase tracking-wider`}>Daily Prayers</span>
           <Bell size={14} className="text-[#34d399]" />
         </div>
         {loadingPrayers ? (
-          <p className="text-center text-xs opacity-50 py-4">Loading 12hr Timings...</p>
+          <p className="text-center text-xs opacity-50 py-4">Loading Timings...</p>
         ) : (
           <div className="space-y-2">
             {[
@@ -384,6 +407,33 @@ function HomeScreen({ setActiveTab, setCurrentTool, prayerTimes, hijriDate, load
             ))}
           </div>
         )}
+      </div>
+
+      {/* 🌟 Special Islamic Timings Card (Ishraq, Chasht, Tahajjud, Zawaal) */}
+      <div className={`${isDarkMode ? 'bg-white/[0.04] border-white/10' : 'bg-white/70 border-slate-200/80 shadow-xl'} backdrop-blur-2xl p-4 rounded-[28px] border space-y-3 transition-colors`}>
+        <div className="flex justify-between items-center pb-2 border-b border-white/5">
+          <span className={`text-xs font-bold ${isDarkMode ? 'text-white/50' : 'text-slate-400'} uppercase tracking-wider flex items-center gap-1.5`}>
+            <Sparkles size={14} className="text-amber-400" /> Special & Prohibited Timings
+          </span>
+        </div>
+        <div className="space-y-2 text-xs">
+          <div className={`flex justify-between items-center p-2.5 rounded-xl ${isDarkMode ? 'bg-white/[0.02]' : 'bg-slate-50'}`}>
+            <span className={isDarkMode ? 'text-white/80' : 'text-slate-700'}>Tahajjud (Last 3rd of Night)</span>
+            <span className="font-mono font-bold text-indigo-300">{prayerTimes?.Tahajjud || '03:15 AM'}</span>
+          </div>
+          <div className={`flex justify-between items-center p-2.5 rounded-xl ${isDarkMode ? 'bg-white/[0.02]' : 'bg-slate-50'}`}>
+            <span className={isDarkMode ? 'text-white/80' : 'text-slate-700'}>Ishraq (After Sunrise)</span>
+            <span className="font-mono font-bold text-[#34d399]">{prayerTimes?.Ishraq || '06:15 AM'}</span>
+          </div>
+          <div className={`flex justify-between items-center p-2.5 rounded-xl ${isDarkMode ? 'bg-white/[0.02]' : 'bg-slate-50'}`}>
+            <span className={isDarkMode ? 'text-white/80' : 'text-slate-700'}>Chasht (Mid-Morning)</span>
+            <span className="font-mono font-bold text-[#34d399]">{prayerTimes?.Chasht || '08:00 AM'}</span>
+          </div>
+          <div className={`flex justify-between items-center p-2.5 rounded-xl ${isDarkMode ? 'bg-rose-500/10 border border-rose-500/20' : 'bg-rose-50 border-rose-100'}`}>
+            <span className="text-rose-400 font-bold flex items-center gap-1"><AlertCircle size={12}/> Zawaal (No Prayer Time)</span>
+            <span className="font-mono font-bold text-rose-400">{prayerTimes?.Zawaal || '12:13 PM'}</span>
+          </div>
+        </div>
       </div>
 
       {/* Quick Navigation Cards */}
