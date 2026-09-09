@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Home, BookOpen, Heart, Compass, Menu, RotateCcw, Download, CheckCircle, ArrowLeft, RefreshCw, Search, Volume2, Bookmark, Share2 } from 'lucide-react';
+import { Home, BookOpen, Heart, Compass, Menu, RotateCcw, Download, CheckCircle, ArrowLeft, RefreshCw, Search, Volume2, Bookmark, Clock, MapPin, Calendar, Bell } from 'lucide-react';
 import { surahsList } from './data/quranData';
 
 export default function App() {
@@ -64,7 +64,12 @@ export default function App() {
               <h1 className="text-base font-bold">
                 {selectedSurah ? selectedSurah.name : currentTool === 'tasbih' ? 'Digital Tasbih' : currentTool === 'asma' ? 'Asma-ul-Husna' : 'Muslim World'}
               </h1>
-              {!currentTool && !selectedSurah && <p className="text-[11px] text-[#34d399] mt-0.5">New Delhi, India</p>}
+              {!currentTool && !selectedSurah && (
+                <div className="flex items-center gap-1 mt-0.5">
+                  <MapPin size={12} className="text-[#34d399]" />
+                  <p className="text-[11px] text-[#34d399]">New Delhi, India</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -138,31 +143,85 @@ function NavItem({ icon, label, isActive, onClick }) {
 }
 
 function HomeScreen({ setActiveTab, setCurrentTool }) {
+  const [timeLeft, setTimeLeft] = useState('02:14:35');
+
+  // Simple live countdown simulation ticker
+  useEffect(() => {
+    const timer = setInterval(() => {
+      // Just a dynamic aesthetic ticker for countdown simulation
+      setTimeLeft('02:14:30');
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const prayers = [
+    { name: 'Fajr', time: '04:32 AM', active: false },
+    { name: 'Dhuhr', time: '12:28 PM', active: true },
+    { name: 'Asr', time: '04:54 PM', active: false },
+    { name: 'Maghrib', time: '07:12 PM', active: false },
+    { name: 'Isha', time: '08:35 PM', active: false },
+  ];
+
   return (
     <div className="space-y-4">
-      <div className="bg-[#059669] p-5 rounded-3xl shadow-lg">
-        <p className="text-[#a7f3d0] text-[11px] font-bold uppercase tracking-wider">Islamic Date • New Delhi</p>
-        <p className="text-white text-3xl font-bold my-1.5">04:32 AM</p>
-        <p className="text-[#ecfdf5] text-xs">Next Prayer: Fajr (In 2 hours 15 mins)</p>
+      {/* Dynamic Hero Prayer Card with Countdown & Animation */}
+      <div className="bg-gradient-to-br from-[#059669] to-[#047857] p-5 rounded-3xl shadow-xl relative overflow-hidden">
+        <div className="absolute -right-6 -bottom-6 w-32 h-32 bg-white/10 rounded-full blur-xl pointer-events-none"></div>
+        
+        <div className="flex justify-between items-start">
+          <div>
+            <div className="flex items-center gap-1.5 text-[#a7f3d0] text-[11px] font-bold uppercase tracking-wider">
+              <Calendar size={13} />
+              <span>27 Safar 1448 AH</span>
+            </div>
+            <h2 className="text-white text-2xl font-bold mt-2">Next: Dhuhr</h2>
+            <p className="text-[#ecfdf5] text-xs mt-0.5">Starts in <span className="font-mono font-bold text-white bg-black/20 px-1.5 py-0.5 rounded">{timeLeft}</span></p>
+          </div>
+          <div className="bg-white/20 p-2.5 rounded-2xl backdrop-blur-md">
+            <Clock className="text-white animate-spin" style={{ animationDuration: '10s' }} size={24} />
+          </div>
+        </div>
+
+        <div className="mt-5 pt-4 border-t border-white/15 flex justify-between items-center text-xs text-[#ecfdf5]">
+          <span>Sunrise: 05:55 AM</span>
+          <span>Sunset: 07:12 PM</span>
+        </div>
       </div>
 
+      {/* Prayer Times List */}
+      <div className="bg-[#1e293b] p-4 rounded-2xl border border-[#334155] space-y-3">
+        <div className="flex justify-between items-center pb-2 border-b border-[#334155]">
+          <span className="text-xs font-bold text-[#94a3b8] uppercase tracking-wider">Today's Schedule</span>
+          <Bell size={14} className="text-[#34d399]" />
+        </div>
+        <div className="space-y-2">
+          {prayers.map((p, idx) => (
+            <div key={idx} className={`flex justify-between items-center p-2.5 rounded-xl ${p.active ? 'bg-[#059669]/20 border border-[#34d399]/40' : 'bg-[#0f172a]'}`}>
+              <span className={`text-xs font-bold ${p.active ? 'text-[#34d399]' : 'text-white'}`}>{p.name}</span>
+              <span className={`text-xs font-mono ${p.active ? 'text-[#34d399] font-bold' : 'text-[#94a3b8]'}`}>{p.time}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Quick Navigation Cards */}
       <div className="grid grid-cols-2 gap-3">
-        <div onClick={() => setActiveTab('quran')} className="bg-[#1e293b] p-4 rounded-2xl border border-[#334155] cursor-pointer">
+        <div onClick={() => setActiveTab('quran')} className="bg-[#1e293b] p-4 rounded-2xl border border-[#334155] cursor-pointer active:scale-95 transition-transform">
           <BookOpen className="text-[#34d399] mb-2" size={24} />
           <p className="text-white text-sm font-bold">Al-Quran</p>
           <p className="text-[#94a3b8] text-[10px] mt-0.5">Read & Listen 114 Surahs</p>
         </div>
-        <div onClick={() => setCurrentTool('tasbih')} className="bg-[#1e293b] p-4 rounded-2xl border border-[#334155] cursor-pointer">
+        <div onClick={() => setCurrentTool('tasbih')} className="bg-[#1e293b] p-4 rounded-2xl border border-[#334155] cursor-pointer active:scale-95 transition-transform">
           <RotateCcw className="text-[#34d399] mb-2" size={24} />
           <p className="text-white text-sm font-bold">Digital Tasbih</p>
           <p className="text-[#94a3b8] text-[10px] mt-0.5">Count daily Zikr</p>
         </div>
-        <div onClick={() => setActiveTab('qibla')} className="bg-[#1e293b] p-4 rounded-2xl border border-[#334155] cursor-pointer">
+        <div onClick={() => setActiveTab('qibla')} className="bg-[#1e293b] p-4 rounded-2xl border border-[#334155] cursor-pointer active:scale-95 transition-transform">
           <Compass className="text-[#34d399] mb-2" size={24} />
           <p className="text-white text-sm font-bold">Qibla Direction</p>
           <p className="text-[#94a3b8] text-[10px] mt-0.5">Accurate Kaaba compass</p>
         </div>
-        <div onClick={() => setCurrentTool('asma')} className="bg-[#1e293b] p-4 rounded-2xl border border-[#334155] cursor-pointer">
+        <div onClick={() => setCurrentTool('asma')} className="bg-[#1e293b] p-4 rounded-2xl border border-[#334155] cursor-pointer active:scale-95 transition-transform">
           <Heart className="text-[#34d399] mb-2" size={24} />
           <p className="text-white text-sm font-bold">99 Names</p>
           <p className="text-[#94a3b8] text-[10px] mt-0.5">Asma-ul-Husna</p>
