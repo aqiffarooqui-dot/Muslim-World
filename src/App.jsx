@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Home, BookOpen, Heart, Compass, Menu, RotateCcw, Download, CheckCircle, ArrowLeft, RefreshCw } from 'lucide-react';
+import { Home, BookOpen, Heart, Compass, Menu, RotateCcw, Download, CheckCircle, ArrowLeft, RefreshCw, Search, Volume2, Bookmark, Share2 } from 'lucide-react';
 import { surahsList } from './data/quranData';
 
 export default function App() {
@@ -9,13 +9,13 @@ export default function App() {
   const [isDownloaded, setIsDownloaded] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [updateAvailable, setUpdateAvailable] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
-  // Check offline storage on load
+  // Check storage & Vercel version updates
   useEffect(() => {
     const cachedQuran = localStorage.getItem('full_quran_cache');
     if (cachedQuran) setIsDownloaded(true);
 
-    // Vercel auto-update simulation / check
     const currentVersion = "1.0.0";
     fetch('/version.json')
       .then(res => res.json())
@@ -50,20 +50,22 @@ export default function App() {
     <div className="min-h-screen bg-[#090d16] text-white flex flex-col pb-20 select-none">
       {/* Header */}
       <header className="bg-[#0f172a] border-b border-[#1e293b] p-4 sticky top-0 z-40">
-        <div className="flex items-center gap-3">
-          {(currentTool || selectedSurah) && (
-            <button 
-              onClick={() => { setCurrentTool(null); setSelectedSurah(null); }}
-              className="w-9 h-9 rounded-full bg-[#1e293b] flex items-center justify-center text-[#34d399]"
-            >
-              <ArrowLeft size={18} />
-            </button>
-          )}
-          <div>
-            <h1 className="text-base font-bold">
-              {selectedSurah ? selectedSurah.name : currentTool === 'tasbih' ? 'Digital Tasbih' : 'Muslim World'}
-            </h1>
-            {!currentTool && !selectedSurah && <p className="text-[11px] text-[#34d399] mt-0.5">New Delhi, India</p>}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            {(currentTool || selectedSurah) && (
+              <button 
+                onClick={() => { setCurrentTool(null); setSelectedSurah(null); }}
+                className="w-9 h-9 rounded-full bg-[#1e293b] flex items-center justify-center text-[#34d399]"
+              >
+                <ArrowLeft size={18} />
+              </button>
+            )}
+            <div>
+              <h1 className="text-base font-bold">
+                {selectedSurah ? selectedSurah.name : currentTool === 'tasbih' ? 'Digital Tasbih' : currentTool === 'asma' ? 'Asma-ul-Husna' : 'Muslim World'}
+              </h1>
+              {!currentTool && !selectedSurah && <p className="text-[11px] text-[#34d399] mt-0.5">New Delhi, India</p>}
+            </div>
           </div>
         </div>
       </header>
@@ -74,15 +76,19 @@ export default function App() {
           <SurahDetail surah={selectedSurah} />
         ) : currentTool === 'tasbih' ? (
           <TasbihView />
+        ) : currentTool === 'asma' ? (
+          <AsmaulHusnaView />
         ) : (
           <>
-            {activeTab === 'home' && <HomeScreen />}
+            {activeTab === 'home' && <HomeScreen setActiveTab={setActiveTab} setCurrentTool={setCurrentTool} />}
             {activeTab === 'quran' && (
               <QuranScreen 
                 isDownloaded={isDownloaded} 
                 downloading={downloading} 
                 downloadFullQuran={downloadFullQuran} 
-                setSelectedSurah={setSelectedSurah} 
+                setSelectedSurah={setSelectedSurah}
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
               />
             )}
             {activeTab === 'dua' && <DuaScreen />}
@@ -92,7 +98,7 @@ export default function App() {
         )}
       </main>
 
-      {/* In-App Native Update Banner */}
+      {/* In-App Update Banner */}
       {updateAvailable && (
         <div className="fixed bottom-20 left-4 right-4 bg-[#0f172a] border border-[#34d399] p-4 rounded-2xl flex justify-between items-center z-50 shadow-2xl">
           <div>
@@ -131,19 +137,48 @@ function NavItem({ icon, label, isActive, onClick }) {
   );
 }
 
-function HomeScreen() {
+function HomeScreen({ setActiveTab, setCurrentTool }) {
   return (
-    <div className="space-y-3">
-      <div className="bg-[#059669] p-5 rounded-3xl">
-        <p className="text-[#a7f3d0] text-[11px] font-bold uppercase tracking-wider">27 Safar 1448 AH</p>
-        <p className="text-white text-3xl font-bold my-1.5">02:45 AM</p>
-        <p className="text-[#ecfdf5] text-xs">Next: Fajr at 04:32 AM</p>
+    <div className="space-y-4">
+      <div className="bg-[#059669] p-5 rounded-3xl shadow-lg">
+        <p className="text-[#a7f3d0] text-[11px] font-bold uppercase tracking-wider">Islamic Date • New Delhi</p>
+        <p className="text-white text-3xl font-bold my-1.5">04:32 AM</p>
+        <p className="text-[#ecfdf5] text-xs">Next Prayer: Fajr (In 2 hours 15 mins)</p>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div onClick={() => setActiveTab('quran')} className="bg-[#1e293b] p-4 rounded-2xl border border-[#334155] cursor-pointer">
+          <BookOpen className="text-[#34d399] mb-2" size={24} />
+          <p className="text-white text-sm font-bold">Al-Quran</p>
+          <p className="text-[#94a3b8] text-[10px] mt-0.5">Read & Listen 114 Surahs</p>
+        </div>
+        <div onClick={() => setCurrentTool('tasbih')} className="bg-[#1e293b] p-4 rounded-2xl border border-[#334155] cursor-pointer">
+          <RotateCcw className="text-[#34d399] mb-2" size={24} />
+          <p className="text-white text-sm font-bold">Digital Tasbih</p>
+          <p className="text-[#94a3b8] text-[10px] mt-0.5">Count daily Zikr</p>
+        </div>
+        <div onClick={() => setActiveTab('qibla')} className="bg-[#1e293b] p-4 rounded-2xl border border-[#334155] cursor-pointer">
+          <Compass className="text-[#34d399] mb-2" size={24} />
+          <p className="text-white text-sm font-bold">Qibla Direction</p>
+          <p className="text-[#94a3b8] text-[10px] mt-0.5">Accurate Kaaba compass</p>
+        </div>
+        <div onClick={() => setCurrentTool('asma')} className="bg-[#1e293b] p-4 rounded-2xl border border-[#334155] cursor-pointer">
+          <Heart className="text-[#34d399] mb-2" size={24} />
+          <p className="text-white text-sm font-bold">99 Names</p>
+          <p className="text-[#94a3b8] text-[10px] mt-0.5">Asma-ul-Husna</p>
+        </div>
       </div>
     </div>
   );
 }
 
-function QuranScreen({ isDownloaded, downloading, downloadFullQuran, setSelectedSurah }) {
+function QuranScreen({ isDownloaded, downloading, downloadFullQuran, setSelectedSurah, searchQuery, setSearchQuery }) {
+  const filteredSurahs = surahsList.filter(s => 
+    s.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    s.meaning.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    s.no.toString().includes(searchQuery)
+  );
+
   return (
     <div className="space-y-3">
       {!isDownloaded ? (
@@ -168,8 +203,20 @@ function QuranScreen({ isDownloaded, downloading, downloadFullQuran, setSelected
         </div>
       )}
 
-      <p className="text-[#94a3b8] text-[11px] font-bold uppercase tracking-wider">Surah List (114)</p>
-      {surahsList.map(surah => (
+      {/* Search Bar */}
+      <div className="relative">
+        <Search className="absolute left-3.5 top-3 text-[#94a3b8]" size={16} />
+        <input 
+          type="text" 
+          placeholder="Search Surah by name or number..." 
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full bg-[#1e293b] text-white pl-10 pr-4 py-2.5 rounded-xl text-xs border border-[#334155] focus:outline-none focus:border-[#34d399]"
+        />
+      </div>
+
+      <p className="text-[#94a3b8] text-[11px] font-bold uppercase tracking-wider">Surah List ({filteredSurahs.length})</p>
+      {filteredSurahs.map(surah => (
         <div 
           key={surah.no} 
           onClick={() => setSelectedSurah(surah)}
@@ -201,7 +248,13 @@ function SurahDetail({ surah }) {
       </div>
       {surah.verses.map(v => (
         <div key={v.id} className="bg-[#1e293b] p-4 rounded-2xl border border-[#334155] space-y-2">
-          <span className="text-[#34d399] text-[10px] font-bold px-2 py-0.5 bg-[#34d399]/10 rounded-md">Ayah {v.id}</span>
+          <div className="flex justify-between items-center">
+            <span className="text-[#34d399] text-[10px] font-bold px-2 py-0.5 bg-[#34d399]/10 rounded-md">Ayah {v.id}</span>
+            <div className="flex gap-2 text-[#94a3b8]">
+              <Volume2 size={14} className="cursor-pointer hover:text-[#34d399]" />
+              <Bookmark size={14} className="cursor-pointer hover:text-[#34d399]" />
+            </div>
+          </div>
           <p className="text-[#ecfdf5] text-xl text-right font-bold">{v.arabic}</p>
           <p className="text-[#cbd5e1] text-xs">{v.translation}</p>
         </div>
@@ -211,7 +264,23 @@ function SurahDetail({ surah }) {
 }
 
 function DuaScreen() {
-  return <p className="text-[#94a3b8] text-xs text-center py-10">Hisnul Muslim Duas coming soon...</p>;
+  const duas = [
+    { title: "Morning & Evening Azkar", arabic: "أَصْبَحْنَا وَأَصْبَحَ الْمُلْكُ لِلَّهِ", meaning: "We have reached the morning and at this very time unto Allah belongs all sovereignty." },
+    { title: "For Seeking Forgiveness", arabic: "رَبِّ اغْفِرْ لِي وَتُبْ عَلَيَّ", meaning: "My Lord, forgive me and accept my repentance." },
+    { title: "For Ease & Hardship", arabic: "اللَّهُمَّ لَا سَهْلَ إِلَّا مَا جَعَلْتَهُ سَهْلًا", meaning: "O Allah, there is no ease except in that which You have made easy." }
+  ];
+  return (
+    <div className="space-y-3">
+      <p className="text-[#94a3b8] text-[11px] font-bold uppercase tracking-wider">Hisnul Muslim Duas</p>
+      {duas.map((d, i) => (
+        <div key={i} className="bg-[#1e293b] p-4 rounded-2xl border border-[#334155] space-y-2">
+          <p className="text-white text-sm font-bold">{d.title}</p>
+          <p className="text-[#ecfdf5] text-lg text-right font-bold">{d.arabic}</p>
+          <p className="text-[#cbd5e1] text-xs">{d.meaning}</p>
+        </div>
+      ))}
+    </div>
+  );
 }
 
 function QiblaScreen() {
@@ -219,7 +288,7 @@ function QiblaScreen() {
     <div className="flex flex-col items-center justify-center py-16">
       <Compass size={80} className="text-[#34d399] animate-pulse" />
       <p className="text-white text-sm font-bold mt-4">Qibla Direction Compass</p>
-      <p className="text-[#94a3b8] text-xs mt-1">Calibrating sensors for New Delhi</p>
+      <p className="text-[#94a3b8] text-xs mt-1">291° West-Northwest from New Delhi</p>
     </div>
   );
 }
@@ -232,7 +301,14 @@ function MoreScreen({ setCurrentTool }) {
         className="bg-[#1e293b] p-4 rounded-2xl border border-[#334155] cursor-pointer"
       >
         <p className="text-white text-sm font-bold">Digital Tasbih Counter</p>
-        <p className="text-[#94a3b8] text-[11px] mt-0.5">Count your Zikr with vibrations</p>
+        <p className="text-[#94a3b8] text-[11px] mt-0.5">Count your daily Zikr with ease</p>
+      </div>
+      <div 
+        onClick={() => setCurrentTool('asma')}
+        className="bg-[#1e293b] p-4 rounded-2xl border border-[#334155] cursor-pointer"
+      >
+        <p className="text-white text-sm font-bold">Asma-ul-Husna (99 Names)</p>
+        <p className="text-[#94a3b8] text-[11px] mt-0.5">Learn beautiful names of Allah</p>
       </div>
     </div>
   );
@@ -256,6 +332,31 @@ function TasbihView() {
       >
         <RotateCcw size={14} /> Reset Counter
       </button>
+    </div>
+  );
+}
+
+function AsmaulHusnaView() {
+  const names = [
+    { no: 1, arabic: "الرَّحْمَٰنُ", name: "Ar-Rahman", meaning: "The Most Gracious" },
+    { no: 2, arabic: "الرَّحِيمُ", name: "Ar-Rahim", meaning: "The Most Merciful" },
+    { no: 3, arabic: "الْمَلِكُ", name: "Al-Malik", meaning: "The King / Sovereign" }
+  ];
+  return (
+    <div className="space-y-3">
+      <p className="text-[#94a3b8] text-[11px] font-bold uppercase tracking-wider">99 Names of Allah</p>
+      {names.map(n => (
+        <div key={n.no} className="bg-[#1e293b] p-4 rounded-2xl border border-[#334155] flex justify-between items-center">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-xl bg-[#34d399]/10 flex items-center justify-center text-[#34d399] text-xs font-bold">{n.no}</div>
+            <div>
+              <p className="text-white text-sm font-bold">{n.name}</p>
+              <p className="text-[#94a3b8] text-[11px]">{n.meaning}</p>
+            </div>
+          </div>
+          <p className="text-[#34d399] text-lg font-bold">{n.arabic}</p>
+        </div>
+      ))}
     </div>
   );
 }
