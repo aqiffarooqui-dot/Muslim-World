@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Home, BookOpen, Heart, Compass, Menu, RotateCcw, Download, CheckCircle, ArrowLeft, RefreshCw, Search, Volume2, Bookmark, Clock, MapPin, Calendar, Bell, Globe } from 'lucide-react';
+import { Home, BookOpen, Heart, Compass, Menu, RotateCcw, Download, CheckCircle, ArrowLeft, RefreshCw, Search, Volume2, Bookmark, Clock, MapPin, Calendar, Bell, Globe, Navigation } from 'lucide-react';
 import { surahsList } from './data/quranData';
 
 export default function App() {
@@ -19,6 +19,7 @@ export default function App() {
   const [loadingPrayers, setLoadingPrayers] = useState(true);
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [tempCityInput, setTempCityInput] = useState('');
+  const [locatingGPS, setLocatingGPS] = useState(false);
 
   useEffect(() => {
     const cachedQuran = localStorage.getItem('full_quran_cache');
@@ -34,13 +35,11 @@ export default function App() {
       }).catch(() => {});
   }, []);
 
-  // Fetch Prayer Times from AlAdhan API based on selected City
+  // Fetch Prayer Times from AlAdhan API based on selected City or Coordinates
   useEffect(() => {
     async function fetchPrayerTimes() {
       setLoadingPrayers(true);
       try {
-        const res = await fetch(`https://api.alquran.cloud/v1/quran/en.asad`); // Keep cache check or fetch timings
-        const dateStr = new Date().toISOString().split('T')[0].split('-').reverse().join('-');
         const timingsRes = await fetch(`https://api.aladhan.com/v1/timingsByCity?city=${city}&country=${country}&method=2`);
         const timingsData = await timingsRes.json();
         
@@ -50,7 +49,6 @@ export default function App() {
           setHijriDate(`${h.day} ${h.month.en} ${h.year} AH`);
         }
       } catch (e) {
-        // Fallback default times if offline
         setPrayerTimes({
           Fajr: "04:32", Dhuhr: "12:28", Asr: "16:54", Maghrib: "19:12", Isha: "20:35", Sunrise: "05:55", Sunset: "19:12"
         });
@@ -61,6 +59,43 @@ export default function App() {
     }
     fetchPrayerTimes();
   }, [city, country]);
+
+  // GPS Location detector using browser geolocation & reverse geocoding
+  const handleDetectGPS = () => {
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported by your browser");
+      return;
+    }
+
+    setLocatingGPS(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        try {
+          // Reverse geocoding using Nominatim OpenStreetMap API
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+          const data = await res.json();
+          const detectedCity = data.address.city || data.address.town || data.address.state_district || 'New Delhi';
+          const detectedCountry = data.address.country || 'India';
+          
+          setCity(detectedCity);
+          setCountry(detectedCountry);
+          localStorage.setItem('user_city', detectedCity);
+          localStorage.setItem('user_country', detectedCountry);
+          setShowLocationModal(false);
+        } catch (err) {
+          alert("Could not fetch address from coordinates.");
+        } finally {
+          setLocatingGPS(false);
+        }
+      },
+      (error) => {
+        setLocatingGPS(false);
+        alert("Unable to retrieve your location. Please check GPS permissions.");
+      },
+      { timeout: 10000 }
+    );
+  };
 
   const handleSaveLocation = (newCity, newCountry) => {
     setCity(newCity);
@@ -151,18 +186,32 @@ export default function App() {
         )}
       </main>
 
-      {/* Location Selector Modal */}
+      {/* Location Selector Modal with GPS Button */}
       {showLocationModal && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4">
           <div className="bg-[#0f172a] border border-white/10 w-full max-w-sm rounded-[32px] p-6 space-y-4 shadow-2xl">
             <div className="flex justify-between items-center">
               <h3 className="text-base font-bold text-white flex items-center gap-2">
-                <Globe size={18} className="text-[#34d399]" /> Select Location
+                <Globe size={18} className="text-[#34d399]" /> Set Location
               </h3>
               <button onClick={() => setShowLocationModal(false)} className="text-white/40 text-xs hover:text-white">✕</button>
             </div>
             
-            <p className="text-xs text-white/60">Choose a preset city or type your location for exact prayer alignment:</p>
+            {/* GPS Auto Detect Button */}
+            <button
+              onClick={handleDetectGPS}
+              disabled={locatingGPS}
+              className="w-full bg-[#059669]/20 border border-[#34d399]/40 text-[#34d399] py-3 rounded-2xl text-xs font-bold flex items-center justify-center gap-2 active:scale-95 transition-all shadow-lg"
+            >
+              <Navigation size={15} className={locatingGPS ? "animate-spin" : ""} />
+              {locatingGPS ? 'Detecting GPS Location...' : 'Use Phone GPS Location'}
+            </button>
+
+            <div className="relative flex py-1 items-center">
+              <div className="flex-grow border-t border-white/10"></div>
+              <span className="flex-shrink mx-4 text-white/40 text-[10px] uppercase">or choose manually</span>
+              <div className="flex-grow border-t border-white/10"></div>
+            </div>
             
             <div className="grid grid-cols-2 gap-2">
               {['New Delhi', 'Mumbai', 'Lucknow', 'Dubai', 'London', 'Mecca'].map((c) => (
@@ -179,7 +228,7 @@ export default function App() {
             <div className="pt-2 space-y-2">
               <input 
                 type="text"
-                placeholder="Or type custom city (e.g. Aligarh)"
+                placeholder="Or type custom city..."
                 value={tempCityInput}
                 onChange={(e) => setTempCityInput(e.target.value)}
                 className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-xs text-white focus:outline-none focus:border-[#34d399]"
@@ -188,7 +237,7 @@ export default function App() {
                 onClick={() => { if(tempCityInput.trim()) handleSaveLocation(tempCityInput.trim(), 'India'); }}
                 className="w-full bg-gradient-to-r from-[#059669] to-[#10b981] text-white py-3 rounded-2xl text-xs font-bold shadow-lg"
               >
-                Apply Custom Location
+                Apply Custom City
               </button>
             </div>
           </div>
@@ -256,7 +305,7 @@ function HomeScreen({ setActiveTab, setCurrentTool, prayerTimes, hijriDate, load
               <span>{hijriDate || 'Loading Hijri date...'}</span>
             </div>
             <h2 className="text-white text-2xl font-bold mt-2 tracking-tight">Prayer Timings</h2>
-            <p className="text-[#ecfdf5] text-xs mt-0.5">Aligned for <span className="font-bold underline">{city}</span></p>
+            <p className="text-[#ecfdf5] text-xs mt-0.5 font-bold underline">{city}</p>
           </div>
           <div className="bg-white/15 p-3 rounded-2xl backdrop-blur-md border border-white/20">
             <Clock className="text-white animate-spin" style={{ animationDuration: '12s' }} size={22} />
