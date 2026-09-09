@@ -187,38 +187,51 @@ export default function App() {
 
   const currentMinutes = currentTime.getHours() * 60 + currentTime.getMinutes();
 
-  let activePrayer = 'Dhuhr';
-  let dosText = "Engage in Dhikr, Quran recitation, and daily lawful work.";
-  let dontsText = "Avoid wasting time in idle talk or missing prayer slots.";
+  let activePrayer = 'Dhuhr Time';
+  let dosText = "Engage in Dhikr, Quran, and lawful daily work.";
+  let dontsText = "Avoid wasting time in idle talk or distractions.";
 
   if (prayerTimes) {
     const fajrMin = parseTimeToMinutes(prayerTimes.Fajr);
+    const sunriseMin = parseTimeToMinutes(prayerTimes.Sunrise);
     const dhuhrMin = parseTimeToMinutes(prayerTimes.Dhuhr);
     const asrMin = parseTimeToMinutes(prayerTimes.Asr);
     const maghribMin = parseTimeToMinutes(prayerTimes.Maghrib);
     const ishaMin = parseTimeToMinutes(prayerTimes.Isha);
     const zawaalMin = parseTimeToMinutes(prayerTimes.Zawaal);
 
-    if (currentMinutes >= fajrMin - 30 && currentMinutes < fajrMin) {
-      activePrayer = 'Sehri / Fajr Prep';
-      dosText = "Finish Sehri before Fajr; make Niyyah for fasting.";
-      dontsText = "Do not eat or drink after Fajr timing starts.";
-    } else if (currentMinutes >= fajrMin && currentMinutes < fajrMin + 90) {
-      activePrayer = 'Fajr';
-      dosText = "Offer 2 Rakat Sunnah & 2 Fardh; recite Morning Azkar.";
-      dontsText = "Do not sleep immediately after Fajr until sunrise.";
+    if (currentMinutes >= fajrMin - 40 && currentMinutes < fajrMin) {
+      activePrayer = 'Sehri Ending Soon';
+      dosText = "Complete Suhoor meal & make Niyyah for fast.";
+      dontsText = "Do not consume food or drink after Fajr begins.";
+    } else if (currentMinutes >= fajrMin && currentMinutes < sunriseMin) {
+      activePrayer = 'Fajr & Morning Azkar';
+      dosText = "Offer Fajr prayer in congregation & recite Morning Azkar.";
+      dontsText = "Do not sleep immediately after Fajr before sunrise.";
+    } else if (currentMinutes >= sunriseMin && currentMinutes < sunriseMin + 30) {
+      activePrayer = 'Ishraq Window';
+      dosText = "Wait after sunrise to offer Ishraq Nafl prayer.";
+      dontsText = "Avoid any prayer exactly at sunrise.";
     } else if (currentMinutes >= zawaalMin - 15 && currentMinutes <= zawaalMin + 15) {
-      activePrayer = 'Zawaal';
-      dosText = "Engage in quiet reflection, istighfar, and dhikr.";
-      dontsText = "Strictly do NOT offer any Nafl or Qaza prayers during Zawaal.";
-    } else if (currentMinutes >= maghribMin && currentMinutes < maghribMin + 45) {
+      activePrayer = 'Zawaal (Prohibited)';
+      dosText = "Engage in Istighfar, quiet reflection, and Dhikr.";
+      dontsText = "Strictly do NOT offer Nafl or Qaza prayers during Zawaal.";
+    } else if (currentMinutes >= dhuhrMin && currentMinutes < asrMin) {
+      activePrayer = 'Dhuhr Time';
+      dosText = "Perform Dhuhr prayer on time and resume productive work.";
+      dontsText = "Avoid delaying prayers for worldly tasks.";
+    } else if (currentMinutes >= asrMin && currentMinutes < maghribMin - 20) {
+      activePrayer = 'Asr Time';
+      dosText = "Offer Asr prayer and prepare for upcoming evening Azkar.";
+      dontsText = "Do not delay Asr until sunset when light fades.";
+    } else if (currentMinutes >= maghribMin - 20 && currentMinutes < maghribMin + 45) {
       activePrayer = 'Maghrib & Iftar';
-      dosText = "Break fast immediately with dates/water; make Dua.";
-      dontsText = "Do not delay offering Maghrib prayer.";
-    } else if (currentMinutes >= ishaMin) {
+      dosText = "Break fast promptly with dates/water; make heartfelt Dua.";
+      dontsText = "Do not delay offering Maghrib prayer after Iftar.";
+    } else if (currentMinutes >= ishaMin || currentMinutes < fajrMin - 40) {
       activePrayer = 'Isha & Tahajjud';
-      dosText = "Offer Isha, Witr, and prepare to rest for Tahajjud.";
-      dontsText = "Avoid late night screen time.";
+      dosText = "Offer Isha, Witr, and wake up for late night Tahajjud.";
+      dontsText = "Avoid late night screen time that causes missing Fajr.";
     }
   }
 
@@ -229,9 +242,9 @@ export default function App() {
         <span className="text-[35vw] font-serif whitespace-nowrap select-none">بِسْمِ اللَّهِ</span>
       </div>
 
-      {/* 🌟 Strictly Fixed / Sticky Header */}
+      {/* Strictly Fixed Header with Complete Live Guidance */}
       <div className="sticky top-0 left-0 right-0 z-50">
-        <header className={`${isDarkMode ? 'bg-[#070b12]/90 border-white/10 text-white' : 'bg-white/90 border-slate-200 text-slate-900'} backdrop-blur-2xl border-b shadow-2xl transition-colors`}>
+        <header className={`${isDarkMode ? 'bg-[#070b12]/95 border-white/10 text-white' : 'bg-white/95 border-slate-200 text-slate-900'} backdrop-blur-2xl border-b shadow-2xl transition-colors`}>
           <div className="p-3.5 flex items-center justify-between border-b border-white/5">
             <div className="flex items-center gap-3">
               {(currentTool || selectedSurah) && (
@@ -266,25 +279,25 @@ export default function App() {
             </button>
           </div>
 
-          {/* Live Animated Guidance Inside Header */}
+          {/* Complete Live Guidance Inside Header */}
           {!currentTool && !selectedSurah && (
-            <div className="bg-gradient-to-r from-[#065f46] via-[#047857] to-[#0f172a] px-4 py-2 text-white flex flex-col gap-1 border-t border-white/10">
+            <div className="bg-gradient-to-r from-[#065f46] via-[#047857] to-[#0f172a] px-4 py-2.5 text-white flex flex-col gap-1.5 border-t border-white/10">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[#a7f3d0] flex items-center gap-1 animate-pulse">
-                  <Sparkles size={11} /> Live Guidance ({activePrayer})
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#a7f3d0] flex items-center gap-1 animate-pulse">
+                  <Sparkles size={11} /> Live Guidance: {activePrayer}
                 </span>
-                <span className="text-[9px] font-mono bg-black/30 px-2 py-0.5 rounded-full text-white/90">
+                <span className="text-[9px] font-mono bg-black/40 px-2.5 py-0.5 rounded-full text-white/90">
                   {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}
                 </span>
               </div>
-              <div className="grid grid-cols-2 gap-2 text-[10px] pb-0.5">
-                <div className="flex items-start gap-1">
-                  <CheckCircle2 size={12} className="text-[#34d399] shrink-0 mt-0.5" />
-                  <span className="leading-tight text-white/90 truncate">{dosText}</span>
+              <div className="grid grid-cols-1 gap-1 text-[11px] pb-0.5">
+                <div className="flex items-center gap-1.5 bg-black/20 px-2.5 py-1 rounded-xl border border-white/10">
+                  <CheckCircle2 size={13} className="text-[#34d399] shrink-0" />
+                  <span className="font-medium text-white/95">Do: {dosText}</span>
                 </div>
-                <div className="flex items-start gap-1">
-                  <XCircle size={12} className="text-rose-400 shrink-0 mt-0.5" />
-                  <span className="leading-tight text-white/90 truncate">{dontsText}</span>
+                <div className="flex items-center gap-1.5 bg-black/20 px-2.5 py-1 rounded-xl border border-white/10">
+                  <XCircle size={13} className="text-rose-400 shrink-0" />
+                  <span className="font-medium text-white/95">Don't: {dontsText}</span>
                 </div>
               </div>
             </div>
@@ -505,7 +518,7 @@ function HomeScreen({ setActiveTab, setCurrentTool, prayerTimes, hijriDate, load
             <span className={isDarkMode ? 'text-white/80' : 'text-slate-700'}>Chasht (Mid-Morning)</span>
             <span className="font-mono font-bold text-[#34d399]">{prayerTimes?.Chasht || '08:00 AM'}</span>
           </div>
-          <div className={`flex justify-between items-center p-2.5 rounded-xl ${activePrayer === 'Zawaal' ? 'bg-rose-500/30 border-2 border-rose-500' : isDarkMode ? 'bg-rose-500/10 border border-rose-500/20' : 'bg-rose-50 border-rose-100'}`}>
+          <div className={`flex justify-between items-center p-2.5 rounded-xl ${activePrayer === 'Zawaal (Prohibited)' ? 'bg-rose-500/30 border-2 border-rose-500' : isDarkMode ? 'bg-rose-500/10 border border-rose-500/20' : 'bg-rose-50 border-rose-100'}`}>
             <span className="text-rose-400 font-bold flex items-center gap-1"><AlertCircle size={12}/> Zawaal (No Prayer Time)</span>
             <span className="font-mono font-bold text-rose-400">{prayerTimes?.Zawaal || '12:13 PM'}</span>
           </div>
