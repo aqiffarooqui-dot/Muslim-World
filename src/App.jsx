@@ -238,7 +238,7 @@ export default function App() {
 
   return (
     <div className={`min-h-screen ${isDarkMode ? 'bg-[#05080f] text-white' : 'bg-[#f1f5f9] text-slate-900'} flex flex-col pb-28 select-none font-sans relative overflow-hidden transition-colors duration-500`}>
-      <QiblaCompass />
+      
       
       <div className="absolute inset-0 pointer-events-none opacity-[0.025] flex items-center justify-center overflow-hidden z-0">
         <span className="text-[35vw] font-serif whitespace-nowrap select-none">بِسْمِ اللَّهِ</span>
@@ -665,7 +665,8 @@ function DuaScreen({ isDarkMode }) {
 
 function QiblaScreen({ city, isDarkMode }) {
   return (
-    <div className="flex flex-col items-center justify-center py-20">
+    <div className="flex flex-col items-center justify-center py-6 w-full">
+      <QiblaCompass />
       <div className={`w-32 h-32 rounded-full ${isDarkMode ? 'bg-white/[0.04] border-white/10' : 'bg-white/70 border-slate-200 shadow-2xl'} backdrop-blur-2xl border flex items-center justify-center relative`}>
         <div className="absolute inset-0 rounded-full border border-[#34d399]/30 animate-ping opacity-25"></div>
         <Compass size={64} className="text-[#34d399]" />
