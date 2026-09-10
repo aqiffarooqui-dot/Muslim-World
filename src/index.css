@@ -1397,3 +1397,261 @@ body{
     grid-template-columns:1fr 1fr 1fr;
   }
 }
+
+/* ===== LIVE SALAH EXPERIENCE ===== */
+
+.mw-live-status{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  margin-bottom:12px;
+}
+
+.mw-live-current,
+.mw-live-next{
+  padding:12px;
+  border-radius:17px;
+  border:1px solid rgba(255,255,255,.09);
+  background:rgba(255,255,255,.045);
+}
+
+.mw-live-current{
+  border-color:rgba(52,211,153,.22);
+  background:linear-gradient(135deg,rgba(52,211,153,.12),rgba(255,255,255,.035));
+}
+
+.mw-live-current span,
+.mw-live-next span{
+  display:block;
+  font-size:7px;
+  font-weight:900;
+  letter-spacing:.13em;
+  opacity:.55;
+}
+
+.mw-live-current span{
+  color:#34d399;
+}
+
+.mw-live-current strong,
+.mw-live-next strong{
+  display:block;
+  font-size:14px;
+  margin-top:4px;
+}
+
+.mw-live-current small,
+.mw-live-next small{
+  display:block;
+  font-size:9px;
+  opacity:.52;
+  margin-top:2px;
+}
+
+.mw-salah-title{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin:12px 1px 7px;
+}
+
+.mw-salah-title span{
+  font-size:8px;
+  font-weight:900;
+  letter-spacing:.12em;
+  opacity:.65;
+}
+
+.mw-salah-title small{
+  font-size:8px;
+  opacity:.4;
+}
+
+.mw-salah-timeline{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+
+.mw-salah-row{
+  display:grid;
+  grid-template-columns:34px 1fr auto;
+  align-items:center;
+  gap:9px;
+  padding:9px;
+  border-radius:15px;
+  border:1px solid rgba(255,255,255,.06);
+  background:rgba(255,255,255,.035);
+  transition:.3s ease;
+}
+
+.mw-salah-row.current{
+  border-color:rgba(52,211,153,.3);
+  background:linear-gradient(90deg,rgba(52,211,153,.13),rgba(52,211,153,.035));
+  box-shadow:0 8px 25px rgba(52,211,153,.08);
+  transform:scale(1.01);
+}
+
+.mw-salah-row.next{
+  border-color:rgba(255,255,255,.14);
+}
+
+.mw-salah-row.completed{
+  opacity:.42;
+}
+
+.mw-salah-icon{
+  width:32px;
+  height:32px;
+  border-radius:11px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(255,255,255,.055);
+  font-size:15px;
+}
+
+.mw-salah-info strong{
+  display:block;
+  font-size:11px;
+}
+
+.mw-salah-info span{
+  display:block;
+  font-size:8px;
+  opacity:.48;
+  margin-top:2px;
+}
+
+.mw-salah-right{
+  text-align:right;
+}
+
+.mw-salah-right b{
+  display:block;
+  font-size:7px;
+  color:#34d399;
+  letter-spacing:.1em;
+  margin-bottom:2px;
+}
+
+.mw-salah-right strong{
+  font-size:10px;
+}
+
+.mw-sun-times{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:7px;
+  margin-top:7px;
+}
+
+.mw-sun-times div{
+  padding:8px;
+  border-radius:13px;
+  background:rgba(255,255,255,.035);
+  text-align:center;
+  border:1px solid rgba(255,255,255,.06);
+}
+
+.mw-sun-times span{
+  display:block;
+  font-size:8px;
+  opacity:.5;
+}
+
+.mw-sun-times strong{
+  display:block;
+  font-size:10px;
+  margin-top:2px;
+}
+
+/* Special Islamic times */
+.mw-special-card{
+  margin-top:12px;
+  padding:13px;
+  border-radius:20px;
+  border:1px solid rgba(255,255,255,.09);
+  background:
+    linear-gradient(135deg,rgba(139,92,246,.08),rgba(52,211,153,.045)),
+    rgba(255,255,255,.025);
+  box-shadow:0 14px 40px rgba(0,0,0,.12);
+}
+
+.mw-special-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:10px;
+  color:#c4b5fd;
+}
+
+.mw-special-head span{
+  display:block;
+  font-size:8px;
+  font-weight:900;
+  letter-spacing:.12em;
+}
+
+.mw-special-head strong{
+  display:block;
+  font-size:12px;
+  margin-top:2px;
+  color:inherit;
+}
+
+.mw-special-grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:7px;
+}
+
+.mw-special-grid>div{
+  padding:9px;
+  border-radius:13px;
+  background:rgba(255,255,255,.04);
+  border:1px solid rgba(255,255,255,.06);
+}
+
+.mw-special-grid span{
+  display:block;
+  font-size:8px;
+  opacity:.5;
+}
+
+.mw-special-grid strong{
+  display:block;
+  font-size:10px;
+  margin-top:3px;
+}
+
+.mw-special-wide{
+  grid-column:1/-1;
+}
+
+.mw-special-note{
+  font-size:7px;
+  line-height:1.5;
+  opacity:.38;
+  margin:9px 2px 0;
+}
+
+.mw-light-mode .mw-salah-row,
+.mw-light-mode .mw-live-current,
+.mw-light-mode .mw-live-next,
+.mw-light-mode .mw-sun-times div,
+.mw-light-mode .mw-special-card,
+.mw-light-mode .mw-special-grid>div{
+  background:rgba(15,118,110,.035);
+  border-color:rgba(15,118,110,.09);
+}
+
+.mw-light-mode .mw-salah-row.current{
+  background:rgba(5,150,105,.08);
+}
+
+@media(max-width:380px){
+  .mw-live-status{
+    grid-template-columns:1fr;
+  }
+}

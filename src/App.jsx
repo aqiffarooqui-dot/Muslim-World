@@ -102,19 +102,116 @@ export default function App() {
             </div>
           </div>
 
-          <div className="mw-prayer-grid">
-            {['Fajr','Sunrise','Dhuhr','Asr','Maghrib','Isha'].map(name => (
-              <div className="mw-prayer-time" key={name}>
-                <span>{name}</span>
-                <strong>{prayerTimes?.[name] || '--:--'}</strong>
-              </div>
-            ))}
+          <div className="mw-live-status">
+            <div className="mw-live-current">
+              <span>● LIVE NOW</span>
+              <strong>{liveSalahState.current?.name || 'Between prayers'}</strong>
+              <small>{currentTime.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</small>
+            </div>
+
+            <div className="mw-live-next">
+              <span>NEXT</span>
+              <strong>{liveSalahState.next?.name || nextPrayer || '--'}</strong>
+              <small>{liveSalahState.next?.time || prayerTimes?.[nextPrayer] || '--:--'}</small>
+            </div>
           </div>
 
-          <div className="mw-prayer-specials">
-            <div><span>🌙 Sehri Ends</span><strong>{prayerTimes?.SehriEnd || '--:--'}</strong></div>
-            <div><span>🌅 Iftar</span><strong>{prayerTimes?.Maghrib || '--:--'}</strong></div>
-            <div><span>🌌 Midnight</span><strong>{prayerTimes?.Isha || '--:--'}</strong></div>
+          <div className="mw-salah-title">
+            <span>🕌 DAILY SALAH</span>
+            <small>Live schedule</small>
+          </div>
+
+          <div className="mw-salah-timeline">
+            {salahTimeline.map((item) => {
+              const mins = parseTimeToMinutes(item.time);
+              const now = currentTime.getHours() * 60 + currentTime.getMinutes();
+              const isCurrent = liveSalahState.current?.name === item.name;
+              const isNext = liveSalahState.next?.name === item.name && !isCurrent;
+              const completed = !isCurrent && !isNext && mins < now;
+
+              return (
+                <div
+                  key={item.name}
+                  className={`mw-salah-row ${isCurrent ? 'current' : ''} ${isNext ? 'next' : ''} ${completed ? 'completed' : ''}`}
+                >
+                  <div className="mw-salah-icon">{item.icon}</div>
+                  <div className="mw-salah-info">
+                    <strong>{item.name}</strong>
+                    <span>
+                      {isCurrent ? 'Prayer time now' : isNext ? 'Coming next' : completed ? 'Completed' : 'Upcoming'}
+                    </span>
+                  </div>
+                  <div className="mw-salah-right">
+                    {isCurrent && <b>LIVE</b>}
+                    {isNext && <b>NEXT</b>}
+                    <strong>{item.time || '--:--'}</strong>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="mw-sun-times">
+            <div>
+              <span>🌅 Sunrise</span>
+              <strong>{prayerTimes?.Sunrise || '--:--'}</strong>
+            </div>
+            <div>
+              <span>🌇 Sunset</span>
+              <strong>{prayerTimes?.Sunset || prayerTimes?.Maghrib || '--:--'}</strong>
+            </div>
+          </div>
+
+          <div className="mw-special-card">
+            <div className="mw-special-head">
+              <div>
+                <span>🌙 SPECIAL ISLAMIC TIMES</span>
+                <strong>Additional timings</strong>
+              </div>
+              <Sparkles size={17}/>
+            </div>
+
+            <div className="mw-special-grid">
+              <div>
+                <span>🌙 Sehri End</span>
+                <strong>{specialPrayerTimes.sehri || '--:--'}</strong>
+              </div>
+
+              <div>
+                <span>🌅 Iftar</span>
+                <strong>{specialPrayerTimes.iftar || '--:--'}</strong>
+              </div>
+
+              <div>
+                <span>☀️ Ishraq</span>
+                <strong>{specialPrayerTimes.ishraq || '--:--'}</strong>
+              </div>
+
+              <div>
+                <span>🌤️ Duha / Chasht</span>
+                <strong>{specialPrayerTimes.duha || '--:--'}</strong>
+              </div>
+
+              <div>
+                <span>⚠️ Zawaal</span>
+                <strong>{specialPrayerTimes.zawaal || '--:--'}</strong>
+              </div>
+
+              <div>
+                <span>🌌 Islamic Midnight</span>
+                <strong>{specialPrayerTimes.islamicMidnight || '--:--'}</strong>
+              </div>
+
+              <div className="mw-special-wide">
+                <span>🌙 Tahajjud / Last Third Starts</span>
+                <strong>{specialPrayerTimes.tahajjudStart || '--:--'}</strong>
+              </div>
+            </div>
+
+            <p className="mw-special-note">
+              Sehri/Iftar and night timings are calculated from the daily prayer data.
+              Tahajjud and Islamic Midnight are calculated dynamically for the current night.
+            </p>
           </div>
 
           <div className="mw-prayer-meta">
@@ -290,6 +387,86 @@ export default function App() {
       </div>
     </div>
   );
+
+
+  const getSpecialPrayerTimes = () => {
+    if (!prayerTimes) return {};
+
+    const toMin = (v) => parseTimeToMinutes(v);
+
+    const fajr = toMin(prayerTimes.Fajr);
+    const sunrise = toMin(prayerTimes.Sunrise);
+    const dhuhr = toMin(prayerTimes.Dhuhr);
+    const maghrib = toMin(prayerTimes.Maghrib);
+    const isha = toMin(prayerTimes.Isha);
+
+    // Dynamic night calculations.
+    const nextFajr = fajr + 1440;
+    const nightLength = (nextFajr - isha + 1440) % 1440 || 1440;
+
+    const islamicMidnightMin = Math.round(isha + nightLength / 2);
+    const lastThirdStart = Math.round(isha + (nightLength * 2) / 3);
+
+    const formatMinutes = (mins) => {
+      mins = ((mins % 1440) + 1440) % 1440;
+      let h = Math.floor(mins / 60);
+      const m = mins % 60;
+      const suffix = h >= 12 ? 'PM' : 'AM';
+      h = h % 12 || 12;
+      return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')} ${suffix}`;
+    };
+
+    return {
+      sehri: prayerTimes.SehriEnd || prayerTimes.Fajr,
+      iftar: prayerTimes.Maghrib,
+      ishraq: formatMinutes(sunrise + 20),
+      duha: formatMinutes(sunrise + 120),
+      zawaal: formatMinutes(dhuhr - 15),
+      islamicMidnight: formatMinutes(islamicMidnightMin),
+      tahajjudStart: formatMinutes(lastThirdStart)
+    };
+  };
+
+  const specialPrayerTimes = getSpecialPrayerTimes();
+
+  const salahTimeline = [
+    { name:'Fajr', time:prayerTimes?.Fajr, icon:'🌅' },
+    { name:'Dhuhr', time:prayerTimes?.Dhuhr, icon:'☀️' },
+    { name:'Asr', time:prayerTimes?.Asr, icon:'🌤️' },
+    { name:'Maghrib', time:prayerTimes?.Maghrib, icon:'🌇' },
+    { name:'Isha', time:prayerTimes?.Isha, icon:'🌙' }
+  ];
+
+  const liveSalahState = (() => {
+    const now = currentTime.getHours() * 60 + currentTime.getMinutes();
+
+    const valid = salahTimeline
+      .map(x => ({...x, minutes:parseTimeToMinutes(x.time)}))
+      .filter(x => x.time);
+
+    if (!valid.length) return { current:null, next:null };
+
+    let current = null;
+    let next = valid.find(x => x.minutes > now) || valid[0];
+
+    for (let i=0; i<valid.length; i++) {
+      const item = valid[i];
+      const following = valid[i+1];
+
+      if (now >= item.minutes && following && now < following.minutes) {
+        current = item;
+        next = following;
+        break;
+      }
+    }
+
+    if (!current && now >= valid[valid.length-1].minutes) {
+      current = valid[valid.length-1];
+      next = valid[0];
+    }
+
+    return { current, next };
+  })();
 
   return () => clearInterval(timer);
   }, []);
