@@ -1,4 +1,4 @@
-import QiblaCompass from "./MuslimWorldNative/src/components/QiblaCompass";
+import QiblaCompass from "./components/QiblaCompass";
 import React, { useState, useEffect } from 'react';
 import { Home, BookOpen, Heart, Compass, Menu, RotateCcw, Download, CheckCircle, ArrowLeft, RefreshCw, Search, Volume2, Bookmark, Clock, MapPin, Calendar, Bell, Globe, Navigation, Sun, Moon, Sparkles, AlertCircle, CheckCircle2, XCircle } from 'lucide-react';
 import { surahsList } from './data/quranData';
