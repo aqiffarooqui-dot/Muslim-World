@@ -1,4 +1,4 @@
-import QiblaCompass from "./components/QiblaCompass";
+import QiblaCompass from "./MuslimWorldNative/src/components/QiblaCompass";
 import React, { useState, useEffect } from 'react';
 import { Home, BookOpen, Heart, Compass, Menu, RotateCcw, Download, CheckCircle, ArrowLeft, RefreshCw, Search, Volume2, Bookmark, Clock, MapPin, Calendar, Bell, Globe, Navigation, Sun, Moon, Sparkles, AlertCircle, CheckCircle2, XCircle } from 'lucide-react';
 import { surahsList } from './data/quranData';
@@ -239,7 +239,6 @@ export default function App() {
   return (
     <div className={`min-h-screen ${isDarkMode ? 'bg-[#05080f] text-white' : 'bg-[#f1f5f9] text-slate-900'} flex flex-col pb-28 select-none font-sans relative overflow-hidden transition-colors duration-500`}>
       <QiblaCompass />
-      
       
       <div className="absolute inset-0 pointer-events-none opacity-[0.025] flex items-center justify-center overflow-hidden z-0">
         <span className="text-[35vw] font-serif whitespace-nowrap select-none">بِسْمِ اللَّهِ</span>
