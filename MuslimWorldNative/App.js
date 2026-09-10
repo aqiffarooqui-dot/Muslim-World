@@ -1,3 +1,4 @@
+import QiblaCompass from "./components/QiblaCompass";
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity, TextInput, Modal, SafeAreaView, StatusBar } from 'react-native';
 import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
@@ -175,6 +176,7 @@ export default function App() {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: isDarkMode ? '#05080f' : '#f1f5f9' }]}>
+      <QiblaCompass />
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
 
       {/* Fixed Native Header */}
