@@ -926,3 +926,474 @@ button {
   }
 }
 
+
+/* =========================================================
+   MUSLIM WORLD — GLOBAL DYNAMIC THEME SYSTEM
+   ========================================================= */
+
+:root {
+  --mw-bg: #f5f7f4;
+  --mw-surface: #ffffff;
+  --mw-surface-soft: #edf2ed;
+  --mw-text: #17231b;
+  --mw-text-soft: #66736a;
+  --mw-primary: #176b45;
+  --mw-primary-dark: #0d4d31;
+  --mw-accent: #c9a84e;
+  --mw-border: rgba(23, 107, 69, 0.13);
+  --mw-shadow: 0 10px 35px rgba(20, 55, 38, 0.08);
+}
+
+html[data-mw-theme="dark"] {
+  --mw-bg: #07110d;
+  --mw-surface: #0e1b15;
+  --mw-surface-soft: #14251d;
+  --mw-text: #f2f7f3;
+  --mw-text-soft: #a7b7ae;
+  --mw-primary: #34d399;
+  --mw-primary-dark: #10b981;
+  --mw-accent: #d8b65b;
+  --mw-border: rgba(255,255,255,.10);
+  --mw-shadow: 0 14px 40px rgba(0,0,0,.28);
+}
+
+html,
+body {
+  background: var(--mw-bg);
+  color: var(--mw-text);
+  transition:
+    background-color .3s ease,
+    color .3s ease;
+}
+
+body {
+  min-height: 100vh;
+}
+
+.mw-app-shell {
+  background: var(--mw-bg);
+  color: var(--mw-text);
+  transition:
+    background-color .3s ease,
+    color .3s ease;
+}
+
+/* Global readable text */
+.mw-app-shell h1,
+.mw-app-shell h2,
+.mw-app-shell h3,
+.mw-app-shell h4,
+.mw-app-shell p,
+.mw-app-shell label {
+  color: inherit;
+}
+
+.mw-app-shell .mw-muted,
+.mw-app-shell .mw-calendar-header p,
+.mw-app-shell .mw-calendar-header small,
+.mw-app-shell .mw-calendar-monthbar small,
+.mw-app-shell .mw-calendar-weekdays span,
+.mw-app-shell .mw-calendar-note,
+.mw-app-shell .mw-event-row small,
+.mw-app-shell .mw-tool-card span,
+.mw-app-shell .mw-more-note p,
+.mw-app-shell .mw-ramadan-note {
+  color: var(--mw-text-soft);
+}
+
+/* Cards dynamically adapt */
+.mw-app-shell .mw-card,
+.mw-app-shell .mw-calendar-card,
+.mw-app-shell .mw-calendar-info,
+.mw-app-shell .mw-ramadan-days,
+.mw-app-shell .mw-ramadan-progress,
+.mw-app-shell .mw-ramadan-checklist,
+.mw-app-shell .mw-ramadan-focus {
+  background: var(--mw-surface);
+  color: var(--mw-text);
+  border-color: var(--mw-border);
+  box-shadow: var(--mw-shadow);
+}
+
+/* Soft surfaces */
+.mw-app-shell .mw-calendar-day,
+.mw-app-shell .mw-ramadan-day,
+.mw-app-shell .mw-event-row,
+.mw-app-shell .mw-check-row,
+.mw-app-shell .mw-tool-icon,
+.mw-app-shell .mw-progress-track {
+  background: var(--mw-surface-soft);
+  color: var(--mw-text);
+}
+
+/* Buttons / controls */
+.mw-app-shell .mw-icon-button,
+.mw-app-shell .mw-calendar-nav {
+  background: var(--mw-surface);
+  color: var(--mw-text);
+  border-color: var(--mw-border);
+}
+
+/* Tool cards */
+.mw-app-shell .mw-tool-card {
+  background: var(--mw-surface);
+  color: var(--mw-text);
+  border-color: var(--mw-border);
+}
+
+.mw-app-shell .mw-tool-card strong {
+  color: var(--mw-text);
+}
+
+/* Calendar */
+.mw-app-shell .mw-calendar-monthbar strong,
+.mw-app-shell .mw-calendar-day strong,
+.mw-app-shell .mw-event-row strong {
+  color: var(--mw-text);
+}
+
+.mw-app-shell .mw-calendar-day.today {
+  background: var(--mw-primary);
+  color: #fff;
+}
+
+.mw-app-shell .mw-calendar-day.today strong {
+  color: #fff;
+}
+
+/* Ramadan */
+.mw-app-shell .mw-ramadan-day {
+  color: var(--mw-text);
+}
+
+.mw-app-shell .mw-ramadan-day.active {
+  background: var(--mw-primary);
+  color: #fff;
+}
+
+.mw-app-shell .mw-ramadan-day.active strong,
+.mw-app-shell .mw-ramadan-day.active span {
+  color: #fff;
+}
+
+.mw-app-shell .mw-check-row {
+  color: var(--mw-text);
+}
+
+/* Theme-aware native inputs */
+.mw-app-shell input,
+.mw-app-shell textarea,
+.mw-app-shell select {
+  background: var(--mw-surface);
+  color: var(--mw-text);
+  border-color: var(--mw-border);
+}
+
+.mw-app-shell input::placeholder,
+.mw-app-shell textarea::placeholder {
+  color: var(--mw-text-soft);
+}
+
+/* Theme transition */
+.mw-app-shell *,
+.mw-app-shell *::before,
+.mw-app-shell *::after {
+  transition-property:
+    background-color,
+    border-color,
+    color,
+    box-shadow,
+    opacity;
+  transition-duration: .25s;
+  transition-timing-function: ease;
+}
+
+/* Do not animate text/content layout */
+.mw-app-shell svg,
+.mw-app-shell img {
+  transition:
+    color .25s ease,
+    opacity .25s ease;
+}
+
+/* Prevent the old dark body layer from leaking through */
+html[data-mw-theme="light"],
+html[data-mw-theme="light"] body {
+  background: #f5f7f4;
+  color: #17231b;
+}
+
+html[data-mw-theme="dark"],
+html[data-mw-theme="dark"] body {
+  background: #07110d;
+  color: #f2f7f3;
+}
+
+/* Better top spacing and no accidental text artifacts */
+.mw-app-shell {
+  overflow-x: clip;
+}
+
+.mw-app-shell > .mw-premium-orb {
+  pointer-events: none;
+}
+
+/* Mobile */
+@media (max-width: 640px) {
+  .mw-app-shell main {
+    padding-top: 14px;
+    padding-bottom: 92px;
+  }
+}
+
+
+/* ===== MUSLIM WORLD PREMIUM PRAYER UI ===== */
+.mw-prayer-premium-card{margin:14px 14px 8px;padding:18px;border:1px solid rgba(255,255,255,.12);border-radius:26px;position:relative;overflow:hidden;box-shadow:0 18px 50px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.08);transition:.35s ease}
+.mw-prayer-premium-card:before{content:"";position:absolute;inset:-50%;background:radial-gradient(circle,rgba(52,211,153,.13),transparent 45%);pointer-events:none}
+.mw-prayer-card-head,.mw-settings-head{display:flex;justify-content:space-between;align-items:center;gap:12px;position:relative}
+.mw-kicker{font-size:9px;font-weight:900;letter-spacing:.14em;color:#34d399;display:flex;align-items:center;gap:5px}
+.mw-prayer-card-head h2{font-size:17px;font-weight:800;margin:3px 0}
+.mw-prayer-card-head p{font-size:10px;opacity:.62;margin:0}
+.mw-prayer-settings-btn{width:38px;height:38px;border-radius:14px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.07);display:flex;align-items:center;justify-content:center;color:#34d399;backdrop-filter:blur(15px)}
+.mw-prayer-mode-switch{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:15px 0;position:relative}
+.mw-prayer-mode-switch button{border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.045);border-radius:14px;padding:10px 7px;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;gap:6px;transition:.25s}
+.mw-prayer-mode-switch button.active{background:linear-gradient(135deg,#047857,#065f46);border-color:rgba(52,211,153,.35);color:#fff;box-shadow:0 8px 24px rgba(4,120,87,.28)}
+.mw-next-prayer{display:flex;align-items:center;justify-content:space-between;padding:13px 14px;border-radius:18px;background:linear-gradient(135deg,rgba(52,211,153,.13),rgba(255,255,255,.035));border:1px solid rgba(52,211,153,.14);margin-bottom:10px}
+.mw-next-prayer span{display:block;font-size:8px;letter-spacing:.12em;opacity:.55;font-weight:900}
+.mw-next-prayer strong{display:block;font-size:16px;margin-top:2px}
+.mw-countdown{font-family:ui-monospace,SFMono-Regular,monospace;font-size:18px;font-weight:900;color:#34d399;text-shadow:0 0 18px rgba(52,211,153,.45)}
+.mw-prayer-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;position:relative}
+.mw-prayer-time{padding:10px 7px;border-radius:15px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.07);text-align:center;transition:.25s}
+.mw-prayer-time:hover{transform:translateY(-2px);box-shadow:0 10px 25px rgba(0,0,0,.16)}
+.mw-prayer-time span{display:block;font-size:9px;opacity:.52}
+.mw-prayer-time strong{display:block;font-size:11px;margin-top:3px}
+.mw-prayer-meta{display:flex;justify-content:space-between;gap:8px;font-size:8px;opacity:.48;margin-top:10px}
+.mw-masjid-panel{position:relative}
+.mw-masjid-selected{display:flex;align-items:center;gap:10px;padding:12px;border-radius:17px;background:rgba(52,211,153,.08);margin-bottom:10px;color:#34d399}
+.mw-masjid-selected div{display:flex;flex-direction:column}
+.mw-masjid-selected strong{color:inherit;font-size:13px}
+.mw-masjid-selected span{font-size:9px;opacity:.65;color:inherit}
+.mw-masjid-empty{display:flex;flex-direction:column;align-items:center;text-align:center;padding:18px 10px;gap:5px;color:#34d399}
+.mw-masjid-empty strong{font-size:13px}
+.mw-masjid-empty span{font-size:9px;opacity:.6;color:inherit}
+.mw-masjid-empty button,.mw-save-masjid{margin-top:8px;border:0;border-radius:13px;padding:10px 16px;background:linear-gradient(135deg,#059669,#047857);color:white;font-size:10px;font-weight:900;box-shadow:0 8px 25px rgba(5,150,105,.25)}
+.mw-modal-backdrop{position:fixed;inset:0;z-index:100;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.62);backdrop-filter:blur(12px);padding:10px}
+.mw-prayer-settings{width:min(100%,520px);max-height:88vh;overflow:auto;border:1px solid rgba(255,255,255,.13);border-radius:28px;padding:20px;background:rgba(7,17,13,.96);box-shadow:0 -15px 70px rgba(0,0,0,.4)}
+.mw-settings-head{margin-bottom:18px}
+.mw-settings-head h2{font-size:19px;font-weight:850;margin:3px 0}
+.mw-settings-head button{background:transparent;border:0;color:#94a3b8}
+.mw-prayer-settings label,.mw-prayer-settings h3{display:block;font-size:10px;font-weight:800;margin:12px 0 6px}
+.mw-prayer-settings select,.mw-prayer-settings input{width:100%;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.06);color:inherit;border-radius:12px;padding:10px;font-size:10px;outline:none}
+.mw-prayer-settings select option{background:#07110d;color:white}
+.mw-setting-divider{height:1px;background:rgba(255,255,255,.08);margin:18px 0}
+.mw-masjid-input-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.mw-save-masjid{width:100%;margin-top:14px}
+.mw-existing-masjids{margin-top:18px}
+.mw-existing-masjids>span{font-size:9px;opacity:.5}
+.mw-existing-masjids button{width:100%;margin-top:7px;display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.045);color:inherit;font-size:10px}
+@media(max-width:420px){.mw-prayer-grid{grid-template-columns:repeat(2,1fr)}.mw-prayer-premium-card{margin:10px;padding:14px}.mw-countdown{font-size:16px}}
+
+/* ===== MUSLIM WORLD GLOBAL PREMIUM SYSTEM ===== */
+:root{
+  --mw-font-scale:100%;
+  --mw-transition:.3s ease;
+}
+
+html{
+  font-size:var(--mw-font-scale);
+}
+
+body{
+  transition:background .4s ease,color .4s ease;
+}
+
+.mw-glass{
+  backdrop-filter:blur(22px);
+  -webkit-backdrop-filter:blur(22px);
+}
+
+.mw-prayer-premium-card,
+.mw-card,
+.mw-glass,
+.mw-prayer-time,
+.mw-prayer-mode-switch button{
+  transition:
+    transform var(--mw-transition),
+    box-shadow var(--mw-transition),
+    border-color var(--mw-transition),
+    background var(--mw-transition);
+}
+
+[data-mw-glow="off"] .mw-premium-orb,
+[data-mw-glow="off"] .mw-gradient,
+[data-mw-glow="off"] .mw-countdown{
+  filter:none!important;
+  text-shadow:none!important;
+}
+
+[data-mw-blur="off"] .mw-glass,
+[data-mw-blur="off"] .mw-modal-backdrop{
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+}
+
+[data-mw-3d="on"] .mw-card:hover,
+[data-mw-3d="on"] .mw-prayer-premium-card:hover,
+[data-mw-3d="on"] .mw-prayer-time:hover{
+  transform:translateY(-3px) perspective(700px) rotateX(.5deg);
+  box-shadow:0 18px 42px rgba(0,0,0,.20);
+}
+
+[data-mw-3d="off"] .mw-card:hover,
+[data-mw-3d="off"] .mw-prayer-premium-card:hover,
+[data-mw-3d="off"] .mw-prayer-time:hover{
+  transform:none!important;
+}
+
+.mw-toggle-list{
+  display:flex;
+  flex-direction:column;
+  gap:7px;
+  margin:8px 0 12px;
+}
+
+.mw-toggle-list button{
+  width:100%;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:11px 12px;
+  border-radius:13px;
+  border:1px solid rgba(255,255,255,.08);
+  background:rgba(255,255,255,.045);
+  color:inherit;
+  font-size:10px;
+  font-weight:700;
+  text-align:left;
+}
+
+.mw-toggle-list button b{
+  color:#34d399;
+  font-size:9px;
+  letter-spacing:.08em;
+}
+
+.mw-light-mode{
+  background:#f5f7f6;
+  color:#10251d;
+}
+
+.mw-light-mode .mw-prayer-premium-card,
+.mw-light-mode .mw-prayer-settings{
+  background:rgba(255,255,255,.88);
+  border-color:rgba(15,118,110,.13);
+  color:#10251d;
+}
+
+.mw-light-mode .mw-prayer-time,
+.mw-light-mode .mw-toggle-list button,
+.mw-light-mode .mw-prayer-mode-switch button{
+  background:rgba(15,118,110,.045);
+  border-color:rgba(15,118,110,.10);
+}
+
+.mw-light-mode .mw-prayer-settings select,
+.mw-light-mode .mw-prayer-settings input{
+  background:#fff;
+  color:#10251d;
+  border-color:rgba(15,118,110,.15);
+}
+
+.mw-light-mode .mw-prayer-settings select option{
+  background:#fff;
+  color:#10251d;
+}
+
+.mw-light-mode .mw-modal-backdrop{
+  background:rgba(15,23,42,.38);
+}
+
+.mw-light-mode .mw-masjid-selected{
+  background:rgba(5,150,105,.08);
+}
+
+.mw-reduced-motion *,
+.mw-reduced-motion *::before,
+.mw-reduced-motion *::after{
+  animation-duration:.01ms!important;
+  animation-iteration-count:1!important;
+  scroll-behavior:auto!important;
+  transition-duration:.01ms!important;
+}
+
+@media(max-width:640px){
+  .mw-prayer-settings{
+    max-height:92vh;
+  }
+}
+
+/* ===== PRAYER ADVANCED ===== */
+.mw-prayer-specials{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:7px;
+  margin:9px 0;
+}
+
+.mw-prayer-specials>div{
+  padding:9px 6px;
+  border-radius:14px;
+  text-align:center;
+  background:rgba(52,211,153,.055);
+  border:1px solid rgba(52,211,153,.09);
+}
+
+.mw-prayer-specials span{
+  display:block;
+  font-size:8px;
+  opacity:.55;
+}
+
+.mw-prayer-specials strong{
+  display:block;
+  font-size:10px;
+  margin-top:3px;
+}
+
+.mw-edit-masjid{
+  width:100%;
+  margin-top:9px;
+  padding:9px;
+  border:1px solid rgba(52,211,153,.12);
+  border-radius:13px;
+  background:rgba(52,211,153,.06);
+  color:#34d399;
+  font-size:9px;
+  font-weight:800;
+}
+
+.mw-masjid-row{
+  display:grid;
+  grid-template-columns:1fr 38px;
+  gap:6px;
+  margin-top:7px;
+}
+
+.mw-masjid-row>button:first-child{
+  margin-top:0!important;
+}
+
+.mw-delete-masjid{
+  display:flex!important;
+  align-items:center;
+  justify-content:center;
+  color:#fb7185!important;
+  background:rgba(244,63,94,.06)!important;
+  border:1px solid rgba(244,63,94,.12)!important;
+}
+
+@media(max-width:420px){
+  .mw-prayer-specials{
+    grid-template-columns:1fr 1fr 1fr;
+  }
+}

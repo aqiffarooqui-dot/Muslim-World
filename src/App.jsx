@@ -21,13 +21,283 @@ export default function App() {
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [tempCityInput, setTempCityInput] = useState('');
   const [locatingGPS, setLocatingGPS] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(true);
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    return localStorage.getItem('mw_theme') !== 'light';
+  });
   const [currentTime, setCurrentTime] = useState(new Date());
+
+  // Premium Prayer Configuration
+  const [prayerMode, setPrayerMode] = useState(localStorage.getItem('mw_prayer_mode') || 'location');
+  const [calculationMethod, setCalculationMethod] = useState(localStorage.getItem('mw_calc_method') || '2');
+  const [madhab, setMadhab] = useState(localStorage.getItem('mw_madhab') || '0');
+  const [selectedMasjid, setSelectedMasjid] = useState(localStorage.getItem('mw_selected_masjid') || '');
+  const [masjids, setMasjids] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('mw_masjids') || '[]'); }
+    catch { return []; }
+  });
+  const [nextPrayer, setNextPrayer] = useState(null);
+  const [prayerCountdown, setPrayerCountdown] = useState('');
+  const [showPrayerSettings, setShowPrayerSettings] = useState(false);
+  const [jummahTime, setJummahTime] = useState(localStorage.getItem('mw_jummah_time') || '01:30 PM');
+  const [sehriReminder, setSehriReminder] = useState(localStorage.getItem('mw_sehri_reminder') !== 'false');
+  const [iftarReminder, setIftarReminder] = useState(localStorage.getItem('mw_iftar_reminder') !== 'false');
+  const [prayerNotifications, setPrayerNotifications] = useState(localStorage.getItem('mw_prayer_notifications') === 'true');
+  const [adhanEnabled, setAdhanEnabled] = useState(localStorage.getItem('mw_adhan') === 'true');
+
+
+  // Global Premium Appearance Settings
+  const [themeMode, setThemeMode] = useState(localStorage.getItem('mw_theme_mode') || 'dark');
+  const [premiumGlow, setPremiumGlow] = useState(localStorage.getItem('mw_glow') !== 'false');
+  const [premiumBlur, setPremiumBlur] = useState(localStorage.getItem('mw_blur') !== 'false');
+  const [premium3D, setPremium3D] = useState(localStorage.getItem('mw_3d') !== 'false');
+  const [reduceMotion, setReduceMotion] = useState(localStorage.getItem('mw_reduce_motion') === 'true');
+  const [fontScale, setFontScale] = useState(localStorage.getItem('mw_font_scale') || '100');
+
+
+
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
-    return () => clearInterval(timer);
+    const prayerSourceUI = (
+    <section className="mw-prayer-premium-card mw-glass">
+      <div className="mw-prayer-card-head">
+        <div>
+          <div className="mw-kicker"><Sparkles size={12}/> PRAYER TIMES</div>
+          <h2>{prayerMode === 'location' ? 'Location Prayer Time' : 'Local Masjid Time'}</h2>
+          <p>{prayerMode === 'location' ? `${city}, ${country}` : (activeMasjid?.name || 'Select your masjid')}</p>
+        </div>
+        <button
+          className="mw-prayer-settings-btn"
+          onClick={() => setShowPrayerSettings(true)}
+          aria-label="Prayer settings"
+        >
+          <Navigation size={17}/>
+        </button>
+      </div>
+
+      <div className="mw-prayer-mode-switch">
+        <button
+          className={prayerMode === 'location' ? 'active' : ''}
+          onClick={() => setPrayerMode('location')}
+        >
+          <MapPin size={15}/> Location Time
+        </button>
+        <button
+          className={prayerMode === 'masjid' ? 'active' : ''}
+          onClick={() => setPrayerMode('masjid')}
+        >
+          <Heart size={15}/> Local Masjid
+        </button>
+      </div>
+
+      {prayerMode === 'location' ? (
+        <>
+          <div className="mw-next-prayer">
+            <div>
+              <span>NEXT PRAYER</span>
+              <strong>{nextPrayer || 'Calculating...'}</strong>
+            </div>
+            <div className="mw-countdown">
+              {prayerCountdown || '--:--:--'}
+            </div>
+          </div>
+
+          <div className="mw-prayer-grid">
+            {['Fajr','Sunrise','Dhuhr','Asr','Maghrib','Isha'].map(name => (
+              <div className="mw-prayer-time" key={name}>
+                <span>{name}</span>
+                <strong>{prayerTimes?.[name] || '--:--'}</strong>
+              </div>
+            ))}
+          </div>
+
+          <div className="mw-prayer-specials">
+            <div><span>🌙 Sehri Ends</span><strong>{prayerTimes?.SehriEnd || '--:--'}</strong></div>
+            <div><span>🌅 Iftar</span><strong>{prayerTimes?.Maghrib || '--:--'}</strong></div>
+            <div><span>🌌 Midnight</span><strong>{prayerTimes?.Isha || '--:--'}</strong></div>
+          </div>
+
+          <div className="mw-prayer-meta">
+            <span>Calculation: {calculationMethod}</span>
+            <span>{madhab === '1' ? 'Hanafi' : 'Shafi / Maliki / Hanbali'}</span>
+          </div>
+        </>
+      ) : (
+        <div className="mw-masjid-panel">
+          {activeMasjid ? (
+            <>
+              <div className="mw-masjid-selected">
+                <Heart size={17}/>
+                <div>
+                  <strong>{activeMasjid.name}</strong>
+                  <span>{activeMasjid.location || 'Local Masjid'}</span>
+                </div>
+              </div>
+
+              <div className="mw-prayer-grid">
+                {['Fajr','Dhuhr','Asr','Maghrib','Isha','Jumuah'].map(name => (
+                  <div className="mw-prayer-time" key={name}>
+                    <span>{name === 'Jumuah' ? 'Jumu’ah' : name}</span>
+                    <strong>{activeMasjid.times?.[name] || '--:--'}</strong>
+                  </div>
+                ))}
+              </div>
+              <button
+                className="mw-edit-masjid"
+                onClick={() => setShowPrayerSettings(true)}
+              >
+                ⚙️ Manage Masjid
+              </button>
+            </>
+          ) : (
+            <div className="mw-masjid-empty">
+              <Heart size={25}/>
+              <strong>No masjid selected</strong>
+              <span>Add your local masjid and enter its Jamaat times.</span>
+              <button onClick={() => setShowPrayerSettings(true)}>
+                Add Masjid
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+    </section>
+  );
+
+  const prayerSettingsUI = showPrayerSettings && (
+    <div className="mw-modal-backdrop" onClick={() => setShowPrayerSettings(false)}>
+      <div className="mw-prayer-settings mw-glass" onClick={e => e.stopPropagation()}>
+        <div className="mw-settings-head">
+          <div>
+            <span className="mw-kicker">PRAYER CONFIGURATION</span>
+            <h2>Prayer Settings</h2>
+          </div>
+          <button onClick={() => setShowPrayerSettings(false)}><XCircle size={20}/></button>
+        </div>
+
+        <label>Calculation Method</label>
+        <select value={calculationMethod} onChange={e => setCalculationMethod(e.target.value)}>
+          <option value="2">ISNA</option>
+          <option value="1">University of Islamic Sciences, Karachi</option>
+          <option value="3">Muslim World League</option>
+          <option value="4">Umm Al-Qura University, Makkah</option>
+          <option value="5">Egyptian General Authority of Survey</option>
+        </select>
+
+        <label>Madhab / Asr</label>
+        <select value={madhab} onChange={e => setMadhab(e.target.value)}>
+          <option value="0">Shafi / Maliki / Hanbali</option>
+          <option value="1">Hanafi</option>
+        </select>
+
+        <div className="mw-setting-divider"/>
+
+                <div className="mw-setting-divider"/>
+
+        <h3>Prayer Notifications</h3>
+
+        <div className="mw-toggle-list">
+          <button onClick={() => setPrayerNotifications(v => !v)}>
+            <span>🔔 Prayer Notifications</span>
+            <b>{prayerNotifications ? 'ON' : 'OFF'}</b>
+          </button>
+
+          <button onClick={() => setAdhanEnabled(v => !v)}>
+            <span>🕌 Adhan</span>
+            <b>{adhanEnabled ? 'ON' : 'OFF'}</b>
+          </button>
+
+          <button onClick={() => setSehriReminder(v => !v)}>
+            <span>🌙 Sehri Reminder</span>
+            <b>{sehriReminder ? 'ON' : 'OFF'}</b>
+          </button>
+
+          <button onClick={() => setIftarReminder(v => !v)}>
+            <span>🌅 Iftar Reminder</span>
+            <b>{iftarReminder ? 'ON' : 'OFF'}</b>
+          </button>
+        </div>
+
+        <label>Jumu’ah Time</label>
+        <input
+          value={jummahTime}
+          onChange={e => setJummahTime(e.target.value)}
+          placeholder="e.g. 01:30 PM"
+        />
+
+<h3>Local Masjid</h3>
+        <input id="mwMasjidName" placeholder="Masjid name"/>
+        <input id="mwMasjidLocation" placeholder="Area / location"/>
+
+        <div className="mw-masjid-input-grid">
+          {['Fajr','Dhuhr','Asr','Maghrib','Isha','Jumuah'].map(name => (
+            <input key={name} id={'mw_'+name} placeholder={name + ' time'}/>
+          ))}
+        </div>
+
+        <button
+          className="mw-save-masjid"
+          onClick={() => {
+            const name = document.getElementById('mwMasjidName')?.value?.trim();
+            if (!name) return alert('Please enter masjid name.');
+            saveMasjid({
+              id: Date.now().toString(),
+              name,
+              location: document.getElementById('mwMasjidLocation')?.value?.trim() || '',
+              times: Object.fromEntries(
+                ['Fajr','Dhuhr','Asr','Maghrib','Isha','Jumuah']
+                .map(x => [x, document.getElementById('mw_'+x)?.value?.trim() || ''])
+              )
+            });
+            setPrayerMode('masjid');
+            setShowPrayerSettings(false);
+          }}
+        >
+          Save Masjid
+        </button>
+
+        {masjids.length > 0 && (
+          <div className="mw-existing-masjids">
+            <span>Saved Masjids</span>
+            {masjids.map(m => (
+              <div className="mw-masjid-row" key={m.id}>
+                <button onClick={() => {
+                  setSelectedMasjid(m.id);
+                  localStorage.setItem('mw_selected_masjid', m.id);
+                  setPrayerMode('masjid');
+                }}>
+                  <span>{m.name}</span>
+                  {m.id === selectedMasjid && <CheckCircle2 size={16}/>}
+                </button>
+                <button
+                  className="mw-delete-masjid"
+                  onClick={() => {
+                    const updated = masjids.filter(x => x.id !== m.id);
+                    setMasjids(updated);
+                    localStorage.setItem('mw_masjids', JSON.stringify(updated));
+                    if (selectedMasjid === m.id) {
+                      setSelectedMasjid(updated[0]?.id || '');
+                      localStorage.setItem('mw_selected_masjid', updated[0]?.id || '');
+                    }
+                  }}
+                >
+                  <XCircle size={15}/>
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  return () => clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    localStorage.setItem('mw_theme', isDarkMode ? 'dark' : 'light');
+    document.documentElement.dataset.mwTheme = isDarkMode ? 'dark' : 'light';
+  }, [isDarkMode]);
 
   useEffect(() => {
     const cachedQuran = localStorage.getItem('full_quran_cache');
@@ -74,7 +344,7 @@ export default function App() {
     async function fetchPrayerTimes() {
       setLoadingPrayers(true);
       try {
-        const timingsRes = await fetch(`https://api.aladhan.com/v1/timingsByCity?city=${city}&country=${country}&method=2`);
+        const timingsRes = await fetch(`https://api.aladhan.com/v1/timingsByCity?city=${encodeURIComponent(city)}&country=${encodeURIComponent(country)}&method=${calculationMethod}&school=${madhab}`);
         const timingsData = await timingsRes.json();
         
         if (timingsData.code === 200) {
@@ -110,7 +380,7 @@ export default function App() {
       }
     }
     fetchPrayerTimes();
-  }, [city, country]);
+  }, [city, country, calculationMethod, madhab, prayerMode]);
 
   const handleDetectGPS = () => {
     if (!navigator.geolocation) {
@@ -154,6 +424,51 @@ export default function App() {
     localStorage.setItem('user_country', newCountry);
     setShowLocationModal(false);
   };
+
+  const saveMasjid = (masjid) => {
+    const updated = [...masjids.filter(m => m.id !== masjid.id), masjid];
+    setMasjids(updated);
+    localStorage.setItem('mw_masjids', JSON.stringify(updated));
+    setSelectedMasjid(masjid.id);
+    localStorage.setItem('mw_selected_masjid', masjid.id);
+  };
+
+  const activeMasjid = masjids.find(m => m.id === selectedMasjid);
+
+  useEffect(() => {
+    if (!prayerTimes || prayerMode !== 'location') return;
+
+    const updateCountdown = () => {
+      const now = new Date();
+      const entries = ['Fajr','Dhuhr','Asr','Maghrib','Isha']
+        .map(name => ({ name, value: prayerTimes[name], minutes: parseTimeToMinutes(prayerTimes[name]) }))
+        .filter(x => x.value && x.minutes >= 0);
+
+      let next = entries.find(x => x.minutes > now.getHours() * 60 + now.getMinutes());
+      if (!next && entries.length) next = { ...entries[0], tomorrow: true };
+
+      if (!next) {
+        setNextPrayer(null);
+        setPrayerCountdown('');
+        return;
+      }
+
+      let diff = next.minutes - (now.getHours() * 60 + now.getMinutes());
+      diff = diff * 60 - now.getSeconds();
+      if (next.tomorrow) diff += 24 * 60 * 60;
+
+      const h = Math.floor(diff / 3600);
+      const m = Math.floor((diff % 3600) / 60);
+      const sec = diff % 60;
+
+      setNextPrayer(next.name);
+      setPrayerCountdown(`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`);
+    };
+
+    updateCountdown();
+    const timer = setInterval(updateCountdown, 1000);
+    return () => clearInterval(timer);
+  }, [prayerTimes, prayerMode, currentTime]);
 
   const downloadFullQuran = async () => {
     setDownloading(true);
@@ -237,7 +552,7 @@ export default function App() {
   }
 
   return (
-    <div className={`min-h-screen ${isDarkMode ? 'bg-[#07110d] text-white' : 'bg-[#f1f5f9] text-slate-900'} flex flex-col pb-28 select-none font-sans relative overflow-hidden transition-colors duration-500`}>\n      <div className="mw-premium-orb mw-premium-orb-one" />\n      <div className="mw-premium-orb mw-premium-orb-two" />
+    <div className={`mw-app-shell min-h-screen ${isDarkMode ? 'bg-[#07110d] text-white' : 'bg-[#f1f5f9] text-slate-900'} flex flex-col pb-28 select-none font-sans relative overflow-hidden transition-colors duration-500`}>      <div className="mw-premium-orb mw-premium-orb-one" />      <div className="mw-premium-orb mw-premium-orb-two" />
       
       
       <div className="absolute inset-0 pointer-events-none opacity-[0.025] flex items-center justify-center overflow-hidden z-0">
