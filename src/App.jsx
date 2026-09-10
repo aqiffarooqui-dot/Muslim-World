@@ -271,7 +271,136 @@ export default function App() {
 
   const currentMinutes = currentTime.getHours() * 60 + currentTime.getMinutes();
 
-const prayerSourceUI = (
+  const getSpecialPrayerTimes = () => {
+    if (!prayerTimes) return {};
+
+    const toMin = (v) => parseTimeToMinutes(v);
+
+    const fajr = toMin(prayerTimes.Fajr);
+    const sunrise = toMin(prayerTimes.Sunrise);
+    const dhuhr = toMin(prayerTimes.Dhuhr);
+    const maghrib = toMin(prayerTimes.Maghrib);
+    const isha = toMin(prayerTimes.Isha);
+
+    // Dynamic night calculations.
+    const nextFajr = fajr + 1440;
+    const nightLength = (nextFajr - isha + 1440) % 1440 || 1440;
+
+    const islamicMidnightMin = Math.round(isha + nightLength / 2);
+    const lastThirdStart = Math.round(isha + (nightLength * 2) / 3);
+
+    const formatMinutes = (mins) => {
+      mins = ((mins % 1440) + 1440) % 1440;
+      let h = Math.floor(mins / 60);
+      const m = mins % 60;
+      const suffix = h >= 12 ? 'PM' : 'AM';
+      h = h % 12 || 12;
+      return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')} ${suffix}`;
+    };
+
+    return {
+      sehri: prayerTimes.SehriEnd || prayerTimes.Fajr,
+      iftar: prayerTimes.Maghrib,
+      ishraq: formatMinutes(sunrise + 20),
+      duha: formatMinutes(sunrise + 120),
+      zawaal: formatMinutes(dhuhr - 15),
+      islamicMidnight: formatMinutes(islamicMidnightMin),
+      tahajjudStart: formatMinutes(lastThirdStart)
+    };
+  };
+
+  const specialPrayerTimes = getSpecialPrayerTimes();
+
+  const salahTimeline = [
+    { name:'Fajr', time:prayerTimes?.Fajr, icon:'🌅' },
+    { name:'Dhuhr', time:prayerTimes?.Dhuhr, icon:'☀️' },
+    { name:'Asr', time:prayerTimes?.Asr, icon:'🌤️' },
+    { name:'Maghrib', time:prayerTimes?.Maghrib, icon:'🌇' },
+    { name:'Isha', time:prayerTimes?.Isha, icon:'🌙' }
+  ];
+
+  const liveSalahState = (() => {
+    const now = currentTime.getHours() * 60 + currentTime.getMinutes();
+
+    const valid = salahTimeline
+      .map(x => ({...x, minutes:parseTimeToMinutes(x.time)}))
+      .filter(x => x.time);
+
+    if (!valid.length) return { current:null, next:null };
+
+    let current = null;
+    let next = valid.find(x => x.minutes > now) || valid[0];
+
+    for (let i=0; i<valid.length; i++) {
+      const item = valid[i];
+      const following = valid[i+1];
+
+      if (now >= item.minutes && following && now < following.minutes) {
+        current = item;
+        next = following;
+        break;
+      }
+    }
+
+    if (!current && now >= valid[valid.length-1].minutes) {
+      current = valid[valid.length-1];
+      next = valid[0];
+    }
+
+    return { current, next };
+  })();
+
+
+
+  let activePrayer = 'Dhuhr Time';
+  let dosText = "Engage in Dhikr, Quran, and lawful daily work.";
+  let dontsText = "Avoid wasting time in idle talk or distractions.";
+
+  if (prayerTimes) {
+    const fajrMin = parseTimeToMinutes(prayerTimes.Fajr);
+    const sunriseMin = parseTimeToMinutes(prayerTimes.Sunrise);
+    const dhuhrMin = parseTimeToMinutes(prayerTimes.Dhuhr);
+    const asrMin = parseTimeToMinutes(prayerTimes.Asr);
+    const maghribMin = parseTimeToMinutes(prayerTimes.Maghrib);
+    const ishaMin = parseTimeToMinutes(prayerTimes.Isha);
+    const zawaalMin = parseTimeToMinutes(prayerTimes.Zawaal);
+
+    if (currentMinutes >= fajrMin - 40 && currentMinutes < fajrMin) {
+      activePrayer = 'Sehri Ending Soon';
+      dosText = "Complete Suhoor meal & make Niyyah for fast.";
+      dontsText = "Do not consume food or drink after Fajr begins.";
+    } else if (currentMinutes >= fajrMin && currentMinutes < sunriseMin) {
+      activePrayer = 'Fajr & Morning Azkar';
+      dosText = "Offer Fajr prayer in congregation & recite Morning Azkar.";
+      dontsText = "Do not sleep immediately after Fajr before sunrise.";
+    } else if (currentMinutes >= sunriseMin && currentMinutes < sunriseMin + 30) {
+      activePrayer = 'Ishraq Window';
+      dosText = "Wait after sunrise to offer Ishraq Nafl prayer.";
+      dontsText = "Avoid any prayer exactly at sunrise.";
+    } else if (currentMinutes >= zawaalMin - 15 && currentMinutes <= zawaalMin + 15) {
+      activePrayer = 'Zawaal (Prohibited)';
+      dosText = "Engage in Istighfar, quiet reflection, and Dhikr.";
+      dontsText = "Strictly do NOT offer Nafl or Qaza prayers during Zawaal.";
+    } else if (currentMinutes >= dhuhrMin && currentMinutes < asrMin) {
+      activePrayer = 'Dhuhr Time';
+      dosText = "Perform Dhuhr prayer on time and resume productive work.";
+      dontsText = "Avoid delaying prayers for worldly tasks.";
+    } else if (currentMinutes >= asrMin && currentMinutes < maghribMin - 20) {
+      activePrayer = 'Asr Time';
+      dosText = "Offer Asr prayer and prepare for upcoming evening Azkar.";
+      dontsText = "Do not delay Asr until sunset when light fades.";
+    } else if (currentMinutes >= maghribMin - 20 && currentMinutes < maghribMin + 45) {
+      activePrayer = 'Maghrib & Iftar';
+      dosText = "Break fast promptly with dates/water; make heartfelt Dua.";
+      dontsText = "Do not delay offering Maghrib prayer after Iftar.";
+    } else if (currentMinutes >= ishaMin || currentMinutes < fajrMin - 40) {
+      activePrayer = 'Isha & Tahajjud';
+      dosText = "Offer Isha, Witr, and wake up for late night Tahajjud.";
+      dontsText = "Avoid late night screen time that causes missing Fajr.";
+    }
+  }
+
+  const prayerSourceUI = (
     <section className="mw-prayer-premium-card mw-glass">
       <div className="mw-prayer-card-head">
         <div>
@@ -474,7 +603,7 @@ const prayerSourceUI = (
     </section>
   );
 
-  const prayerSettingsUI = showPrayerSettings && (
+    const prayerSettingsUI = showPrayerSettings && (
     <div className="mw-modal-backdrop" onClick={() => setShowPrayerSettings(false)}>
       <div className="mw-prayer-settings mw-glass" onClick={e => e.stopPropagation()}>
         <div className="mw-settings-head">
@@ -601,135 +730,6 @@ const prayerSourceUI = (
     </div>
   );
 
-
-  const getSpecialPrayerTimes = () => {
-    if (!prayerTimes) return {};
-
-    const toMin = (v) => parseTimeToMinutes(v);
-
-    const fajr = toMin(prayerTimes.Fajr);
-    const sunrise = toMin(prayerTimes.Sunrise);
-    const dhuhr = toMin(prayerTimes.Dhuhr);
-    const maghrib = toMin(prayerTimes.Maghrib);
-    const isha = toMin(prayerTimes.Isha);
-
-    // Dynamic night calculations.
-    const nextFajr = fajr + 1440;
-    const nightLength = (nextFajr - isha + 1440) % 1440 || 1440;
-
-    const islamicMidnightMin = Math.round(isha + nightLength / 2);
-    const lastThirdStart = Math.round(isha + (nightLength * 2) / 3);
-
-    const formatMinutes = (mins) => {
-      mins = ((mins % 1440) + 1440) % 1440;
-      let h = Math.floor(mins / 60);
-      const m = mins % 60;
-      const suffix = h >= 12 ? 'PM' : 'AM';
-      h = h % 12 || 12;
-      return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')} ${suffix}`;
-    };
-
-    return {
-      sehri: prayerTimes.SehriEnd || prayerTimes.Fajr,
-      iftar: prayerTimes.Maghrib,
-      ishraq: formatMinutes(sunrise + 20),
-      duha: formatMinutes(sunrise + 120),
-      zawaal: formatMinutes(dhuhr - 15),
-      islamicMidnight: formatMinutes(islamicMidnightMin),
-      tahajjudStart: formatMinutes(lastThirdStart)
-    };
-  };
-
-  const specialPrayerTimes = getSpecialPrayerTimes();
-
-  const salahTimeline = [
-    { name:'Fajr', time:prayerTimes?.Fajr, icon:'🌅' },
-    { name:'Dhuhr', time:prayerTimes?.Dhuhr, icon:'☀️' },
-    { name:'Asr', time:prayerTimes?.Asr, icon:'🌤️' },
-    { name:'Maghrib', time:prayerTimes?.Maghrib, icon:'🌇' },
-    { name:'Isha', time:prayerTimes?.Isha, icon:'🌙' }
-  ];
-
-  const liveSalahState = (() => {
-    const now = currentTime.getHours() * 60 + currentTime.getMinutes();
-
-    const valid = salahTimeline
-      .map(x => ({...x, minutes:parseTimeToMinutes(x.time)}))
-      .filter(x => x.time);
-
-    if (!valid.length) return { current:null, next:null };
-
-    let current = null;
-    let next = valid.find(x => x.minutes > now) || valid[0];
-
-    for (let i=0; i<valid.length; i++) {
-      const item = valid[i];
-      const following = valid[i+1];
-
-      if (now >= item.minutes && following && now < following.minutes) {
-        current = item;
-        next = following;
-        break;
-      }
-    }
-
-    if (!current && now >= valid[valid.length-1].minutes) {
-      current = valid[valid.length-1];
-      next = valid[0];
-    }
-
-    return { current, next };
-  })();
-
-
-
-  let activePrayer = 'Dhuhr Time';
-  let dosText = "Engage in Dhikr, Quran, and lawful daily work.";
-  let dontsText = "Avoid wasting time in idle talk or distractions.";
-
-  if (prayerTimes) {
-    const fajrMin = parseTimeToMinutes(prayerTimes.Fajr);
-    const sunriseMin = parseTimeToMinutes(prayerTimes.Sunrise);
-    const dhuhrMin = parseTimeToMinutes(prayerTimes.Dhuhr);
-    const asrMin = parseTimeToMinutes(prayerTimes.Asr);
-    const maghribMin = parseTimeToMinutes(prayerTimes.Maghrib);
-    const ishaMin = parseTimeToMinutes(prayerTimes.Isha);
-    const zawaalMin = parseTimeToMinutes(prayerTimes.Zawaal);
-
-    if (currentMinutes >= fajrMin - 40 && currentMinutes < fajrMin) {
-      activePrayer = 'Sehri Ending Soon';
-      dosText = "Complete Suhoor meal & make Niyyah for fast.";
-      dontsText = "Do not consume food or drink after Fajr begins.";
-    } else if (currentMinutes >= fajrMin && currentMinutes < sunriseMin) {
-      activePrayer = 'Fajr & Morning Azkar';
-      dosText = "Offer Fajr prayer in congregation & recite Morning Azkar.";
-      dontsText = "Do not sleep immediately after Fajr before sunrise.";
-    } else if (currentMinutes >= sunriseMin && currentMinutes < sunriseMin + 30) {
-      activePrayer = 'Ishraq Window';
-      dosText = "Wait after sunrise to offer Ishraq Nafl prayer.";
-      dontsText = "Avoid any prayer exactly at sunrise.";
-    } else if (currentMinutes >= zawaalMin - 15 && currentMinutes <= zawaalMin + 15) {
-      activePrayer = 'Zawaal (Prohibited)';
-      dosText = "Engage in Istighfar, quiet reflection, and Dhikr.";
-      dontsText = "Strictly do NOT offer Nafl or Qaza prayers during Zawaal.";
-    } else if (currentMinutes >= dhuhrMin && currentMinutes < asrMin) {
-      activePrayer = 'Dhuhr Time';
-      dosText = "Perform Dhuhr prayer on time and resume productive work.";
-      dontsText = "Avoid delaying prayers for worldly tasks.";
-    } else if (currentMinutes >= asrMin && currentMinutes < maghribMin - 20) {
-      activePrayer = 'Asr Time';
-      dosText = "Offer Asr prayer and prepare for upcoming evening Azkar.";
-      dontsText = "Do not delay Asr until sunset when light fades.";
-    } else if (currentMinutes >= maghribMin - 20 && currentMinutes < maghribMin + 45) {
-      activePrayer = 'Maghrib & Iftar';
-      dosText = "Break fast promptly with dates/water; make heartfelt Dua.";
-      dontsText = "Do not delay offering Maghrib prayer after Iftar.";
-    } else if (currentMinutes >= ishaMin || currentMinutes < fajrMin - 40) {
-      activePrayer = 'Isha & Tahajjud';
-      dosText = "Offer Isha, Witr, and wake up for late night Tahajjud.";
-      dontsText = "Avoid late night screen time that causes missing Fajr.";
-    }
-  }
 
   return (
     <div className={`mw-app-shell min-h-screen ${isDarkMode ? 'bg-[#07110d] text-white' : 'bg-[#f1f5f9] text-slate-900'} flex flex-col pb-28 select-none font-sans relative overflow-hidden transition-colors duration-500`}>      <div className="mw-premium-orb mw-premium-orb-one" />      <div className="mw-premium-orb mw-premium-orb-two" />
