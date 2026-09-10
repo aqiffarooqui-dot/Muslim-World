@@ -237,7 +237,7 @@ export default function App() {
   }
 
   return (
-    <div className={`min-h-screen ${isDarkMode ? 'bg-[#05080f] text-white' : 'bg-[#f1f5f9] text-slate-900'} flex flex-col pb-28 select-none font-sans relative overflow-hidden transition-colors duration-500`}>
+    <div className={`min-h-screen ${isDarkMode ? 'bg-[#07110d] text-white' : 'bg-[#f1f5f9] text-slate-900'} flex flex-col pb-28 select-none font-sans relative overflow-hidden transition-colors duration-500`}>\n      <div className="mw-premium-orb mw-premium-orb-one" />\n      <div className="mw-premium-orb mw-premium-orb-two" />
       
       
       <div className="absolute inset-0 pointer-events-none opacity-[0.025] flex items-center justify-center overflow-hidden z-0">
@@ -246,7 +246,7 @@ export default function App() {
 
       {/* Strictly Fixed Header with Complete Live Guidance */}
       <div className="sticky top-0 left-0 right-0 z-50">
-        <header className={`${isDarkMode ? 'bg-[#070b12]/95 border-white/10 text-white' : 'bg-white/95 border-slate-200 text-slate-900'} backdrop-blur-2xl border-b shadow-2xl transition-colors`}>
+        <header className={`${isDarkMode ? 'bg-[#070b12]/95 border-white/10 text-white' : 'bg-white/95 border-slate-200 text-slate-900'} backdrop-blur-2xl border-b shadow-xl transition-colors mw-header`}>
           <div className="p-3.5 flex items-center justify-between border-b border-white/5">
             <div className="flex items-center gap-3">
               {(currentTool || selectedSurah) && (
@@ -416,206 +416,509 @@ function NavItem({ icon, label, isActive, onClick, isDarkMode }) {
 }
 
 function HomeScreen({ setActiveTab, setCurrentTool, prayerTimes, hijriDate, loadingPrayers, city, isDarkMode, currentTime, activePrayer }) {
+  const prayers = [
+    { name: 'Fajr', key: 'Fajr' },
+    { name: 'Dhuhr', key: 'Dhuhr' },
+    { name: 'Asr', key: 'Asr' },
+    { name: 'Maghrib', key: 'Maghrib' },
+    { name: 'Isha', key: 'Isha' }
+  ];
+
+  const quickActions = [
+    {
+      title: 'Al-Quran',
+      subtitle: 'Read & continue',
+      icon: <BookOpen size={21} />,
+      action: () => setActiveTab('quran')
+    },
+    {
+      title: 'Qibla',
+      subtitle: 'Find direction',
+      icon: <Compass size={21} />,
+      action: () => setActiveTab('qibla')
+    },
+    {
+      title: 'Duas',
+      subtitle: 'Daily supplications',
+      icon: <Heart size={21} />,
+      action: () => setActiveTab('dua')
+    },
+    {
+      title: 'Tasbih',
+      subtitle: 'Remember Allah',
+      icon: <RotateCcw size={21} />,
+      action: () => setCurrentTool('tasbih')
+    }
+  ];
+
   return (
-    <div className="space-y-4">
-      
-      <div className="bg-gradient-to-br from-[#065f46]/85 via-[#047857]/85 to-[#064e3b]/85 backdrop-blur-2xl p-5 rounded-[32px] shadow-2xl border border-white/20 relative overflow-hidden text-white">
-        <div className="absolute right-3 -bottom-4 w-32 h-32 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
-        
-        <div className="flex justify-between items-center mb-4 relative z-10">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-amber-300 border border-white/20">
-              <Moon size={16} />
-            </div>
+    <main className="w-full max-w-6xl mx-auto px-4 sm:px-6 py-5 sm:py-7 space-y-5">
+
+      {/* Welcome */}
+      <section className="flex items-end justify-between gap-4">
+        <div>
+          <p className={`text-xs font-semibold uppercase tracking-[0.18em] ${isDarkMode ? 'text-emerald-300/70' : 'text-emerald-700/70'}`}>
+            Assalamu Alaikum
+          </p>
+          <h1 className={`mt-1 text-2xl sm:text-3xl font-bold tracking-tight ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+            Muslim World
+          </h1>
+          <div className={`flex items-center gap-1.5 mt-1 text-xs ${isDarkMode ? 'text-white/50' : 'text-slate-500'}`}>
+            <MapPin size={13} />
+            <span>{city}</span>
+            <span>•</span>
+            <span>{hijriDate || 'Islamic Calendar'}</span>
+          </div>
+        </div>
+
+        <button
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          className={`hidden sm:flex w-11 h-11 rounded-2xl items-center justify-center border ${
+            isDarkMode
+              ? 'bg-white/5 border-white/10 text-emerald-300'
+              : 'bg-white border-slate-200 text-emerald-700'
+          }`}
+        >
+          <Bell size={19} />
+        </button>
+      </section>
+
+      {/* Prayer Hero */}
+      <section className="mw-gradient rounded-[28px] p-5 sm:p-7 shadow-2xl relative overflow-hidden">
+        <div className="absolute -right-16 -top-20 w-56 h-56 rounded-full bg-white/10 blur-2xl" />
+        <div className="absolute right-8 bottom-[-70px] w-40 h-40 rounded-full bg-[#c9a84e]/20 blur-2xl" />
+
+        <div className="relative">
+          <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-white text-sm font-bold tracking-tight">Ramazan Fasting Guide</p>
-              <p className="text-[#a7f3d0] text-[10px]">Today's Sehri & Iftar Timings</p>
+              <div className="flex items-center gap-2 text-white/65 text-xs font-bold uppercase tracking-[0.16em]">
+                <Clock size={14} />
+                Live Prayer Status
+              </div>
+
+              <h2 className="mt-2 text-2xl sm:text-3xl font-bold tracking-tight">
+                {activePrayer}
+              </h2>
+
+              <p className="mt-1 text-sm text-white/65">
+                {loadingPrayers ? 'Updating prayer times…' : `Prayer times for ${city}`}
+              </p>
+            </div>
+
+            <div className="text-right shrink-0">
+              <p className="text-xs text-white/55">Today</p>
+              <p className="text-lg font-bold">{currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
             </div>
           </div>
-          <span className="text-[10px] font-bold px-2.5 py-1 bg-white/20 backdrop-blur-md rounded-full border border-white/15">Active</span>
+
+          <div className="mt-6 grid grid-cols-2 gap-3">
+            <div className="rounded-2xl bg-black/15 border border-white/10 p-4">
+              <p className="text-[10px] uppercase tracking-widest text-white/50 font-bold">Sehri Ends</p>
+              <p className="mt-1 text-xl font-bold">
+                {loadingPrayers ? '—' : prayerTimes?.SehriEnd || '—'}
+              </p>
+            </div>
+
+            <div className="rounded-2xl bg-black/15 border border-white/10 p-4">
+              <p className="text-[10px] uppercase tracking-widest text-white/50 font-bold">Maghrib</p>
+              <p className="mt-1 text-xl font-bold">
+                {loadingPrayers ? '—' : prayerTimes?.Maghrib || '—'}
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Quick Actions */}
+      <section>
+        <div className="flex items-center justify-between mb-3 px-1">
+          <h2 className={`mw-section-title ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+            Quick Access
+          </h2>
+          <span className={`text-xs ${isDarkMode ? 'text-white/40' : 'text-slate-400'}`}>
+            Essentials
+          </span>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 relative z-10">
-          <div className="bg-black/25 backdrop-blur-xl p-3.5 rounded-2xl border border-white/15 flex flex-col justify-between">
-            <span className="text-[#a7f3d0] text-[10px] font-bold uppercase tracking-wider">Sehri End</span>
-            <span className="text-white text-xl font-mono font-bold mt-1">{loadingPrayers ? '...' : prayerTimes?.SehriEnd || '04:32 AM'}</span>
-            <span className="text-[9px] text-white/60 mt-0.5">Suhoor limit</span>
-          </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {quickActions.map((item) => (
+            <button
+              key={item.title}
+              onClick={item.action}
+              className={`text-left p-4 rounded-[22px] border ${
+                isDarkMode
+                  ? 'bg-white/[0.045] border-white/10 hover:bg-white/[0.07]'
+                  : 'bg-white border-slate-200 hover:border-emerald-200'
+              } shadow-sm`}
+            >
+              <div className={`w-10 h-10 rounded-2xl flex items-center justify-center ${
+                isDarkMode
+                  ? 'bg-emerald-400/10 text-emerald-300'
+                  : 'bg-emerald-50 text-emerald-700'
+              }`}>
+                {item.icon}
+              </div>
 
-          <div className="bg-black/25 backdrop-blur-xl p-3.5 rounded-2xl border border-white/15 flex flex-col justify-between">
-            <span className="text-amber-300 text-[10px] font-bold uppercase tracking-wider">Iftar Time</span>
-            <span className="text-white text-xl font-mono font-bold mt-1">{loadingPrayers ? '...' : prayerTimes?.Maghrib || '07:12 PM'}</span>
-            <span className="text-[9px] text-white/60 mt-0.5">Fast Opening</span>
-          </div>
+              <p className={`mt-3 text-sm font-bold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+                {item.title}
+              </p>
+              <p className={`mt-0.5 text-[11px] ${isDarkMode ? 'text-white/40' : 'text-slate-500'}`}>
+                {item.subtitle}
+              </p>
+            </button>
+          ))}
         </div>
-      </div>
+      </section>
 
-      <div className={`${isDarkMode ? 'bg-white/[0.05] border-white/15' : 'bg-white/80 border-slate-200/80 shadow-xl'} backdrop-blur-2xl p-5 rounded-[32px] border relative overflow-hidden transition-colors`}>
-        <div className="flex justify-between items-start">
+      {/* Prayer Times */}
+      <section className={`rounded-[26px] border p-4 sm:p-5 ${
+        isDarkMode
+          ? 'bg-white/[0.035] border-white/10'
+          : 'bg-white border-slate-200'
+      }`}>
+        <div className="flex items-center justify-between mb-4">
           <div>
-            <div className="flex items-center gap-1.5 text-[#34d399] text-[11px] font-bold uppercase tracking-wider">
-              <Calendar size={13} />
-              <span>{hijriDate || 'Loading Hijri date...'}</span>
-            </div>
-            <h2 className={`text-xl font-bold mt-1 ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{city} Schedule</h2>
+            <h2 className={`text-lg font-bold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>
+              Today's Prayers
+            </h2>
+            <p className={`text-xs mt-0.5 ${isDarkMode ? 'text-white/40' : 'text-slate-500'}`}>
+              Accurate local prayer schedule
+            </p>
           </div>
-          <div className={`${isDarkMode ? 'bg-white/10 border-white/15' : 'bg-slate-100 border-slate-200'} p-2.5 rounded-2xl backdrop-blur-md border`}>
-            <Clock className="text-[#34d399]" size={20} />
-          </div>
+          <Sun size={19} className={isDarkMode ? 'text-amber-300' : 'text-amber-500'} />
         </div>
 
-        <div className={`mt-4 pt-3.5 border-t ${isDarkMode ? 'border-white/10 text-white/80' : 'border-slate-100 text-slate-700'} flex justify-between items-center text-xs font-medium`}>
-          <span>Sunrise: {prayerTimes?.Sunrise || '05:55 AM'}</span>
-          <span>Sunset: {prayerTimes?.Sunset || '07:12 PM'}</span>
-        </div>
-      </div>
-
-      <div className={`${isDarkMode ? 'bg-white/[0.04] border-white/10' : 'bg-white/70 border-slate-200/80 shadow-xl'} backdrop-blur-2xl p-4 rounded-[28px] border space-y-3 transition-colors`}>
-        <div className="flex justify-between items-center pb-2 border-b border-white/5">
-          <span className={`text-xs font-bold ${isDarkMode ? 'text-white/50' : 'text-slate-400'} uppercase tracking-wider`}>Daily Prayers (12-hr Format)</span>
-          <Bell size={14} className="text-[#34d399]" />
-        </div>
         {loadingPrayers ? (
-          <p className="text-center text-xs opacity-50 py-4">Loading Timings...</p>
+          <div className="grid grid-cols-5 gap-2">
+            {prayers.map((p) => (
+              <div key={p.key} className={`rounded-2xl p-3 h-20 animate-pulse ${
+                isDarkMode ? 'bg-white/5' : 'bg-slate-100'
+              }`} />
+            ))}
+          </div>
         ) : (
-          <div className="space-y-2">
-            {[
-              { name: 'Fajr', time: prayerTimes?.Fajr },
-              { name: 'Dhuhr', time: prayerTimes?.Dhuhr },
-              { name: 'Asr', time: prayerTimes?.Asr },
-              { name: 'Maghrib', time: prayerTimes?.Maghrib },
-              { name: 'Isha', time: prayerTimes?.Isha },
-            ].map((p, idx) => {
+          <div className="grid grid-cols-5 gap-2">
+            {prayers.map((p) => {
               const isCurrent = activePrayer.toLowerCase().includes(p.name.toLowerCase());
+
               return (
-                <div key={idx} className={`flex justify-between items-center p-3 rounded-2xl backdrop-blur-md transition-all ${isCurrent ? 'bg-[#059669]/40 border-2 border-[#34d399] shadow-lg scale-[1.02]' : isDarkMode ? 'bg-white/[0.02] border-white/5' : 'bg-white/50 border-slate-100'}`}>
-                  <span className={`text-xs font-bold flex items-center gap-1.5 ${isCurrent ? 'text-[#34d399]' : isDarkMode ? 'text-white/90' : 'text-slate-700'}`}>
-                    {isCurrent && <span className="w-2 h-2 rounded-full bg-[#34d399] animate-ping"></span>}
+                <div
+                  key={p.key}
+                  className={`rounded-2xl p-2.5 sm:p-3 text-center border ${
+                    isCurrent
+                      ? 'bg-emerald-500/15 border-emerald-400/40'
+                      : isDarkMode
+                        ? 'bg-white/[0.025] border-white/5'
+                        : 'bg-slate-50 border-slate-100'
+                  }`}
+                >
+                  <p className={`text-[10px] sm:text-xs font-bold ${
+                    isCurrent
+                      ? 'text-emerald-400'
+                      : isDarkMode ? 'text-white/55' : 'text-slate-500'
+                  }`}>
                     {p.name}
-                  </span>
-                  <span className={`text-xs font-mono ${isCurrent ? 'text-[#34d399] font-extrabold' : isDarkMode ? 'text-white/70' : 'text-slate-600'}`}>{p.time || '--:--'}</span>
+                  </p>
+                  <p className={`mt-1 text-[11px] sm:text-xs font-semibold ${
+                    isDarkMode ? 'text-white' : 'text-slate-800'
+                  }`}>
+                    {prayerTimes?.[p.key] || '—'}
+                  </p>
                 </div>
               );
             })}
           </div>
         )}
-      </div>
+      </section>
 
-      <div className={`${isDarkMode ? 'bg-white/[0.04] border-white/10' : 'bg-white/70 border-slate-200/80 shadow-xl'} backdrop-blur-2xl p-4 rounded-[28px] border space-y-3 transition-colors`}>
-        <div className="flex justify-between items-center pb-2 border-b border-white/5">
-          <span className={`text-xs font-bold ${isDarkMode ? 'text-white/50' : 'text-slate-400'} uppercase tracking-wider flex items-center gap-1.5`}>
-            <Sparkles size={14} className="text-amber-400" /> Special & Prohibited Timings
-          </span>
-        </div>
-        <div className="space-y-2 text-xs">
-          <div className={`flex justify-between items-center p-2.5 rounded-xl ${isDarkMode ? 'bg-white/[0.02]' : 'bg-slate-50'}`}>
-            <span className={isDarkMode ? 'text-white/80' : 'text-slate-700'}>Tahajjud (Last 3rd of Night)</span>
-            <span className="font-mono font-bold text-indigo-300">{prayerTimes?.Tahajjud || '03:15 AM'}</span>
+      {/* Islamic Focus */}
+      <section className={`rounded-[26px] p-5 border ${
+        isDarkMode
+          ? 'bg-[#102219] border-emerald-400/10'
+          : 'bg-emerald-50/70 border-emerald-100'
+      }`}>
+        <div className="flex gap-4 items-start">
+          <div className={`w-11 h-11 shrink-0 rounded-2xl flex items-center justify-center ${
+            isDarkMode
+              ? 'bg-emerald-400/10 text-emerald-300'
+              : 'bg-white text-emerald-700'
+          }`}>
+            <Sparkles size={20} />
           </div>
-          <div className={`flex justify-between items-center p-2.5 rounded-xl ${isDarkMode ? 'bg-white/[0.02]' : 'bg-slate-50'}`}>
-            <span className={isDarkMode ? 'text-white/80' : 'text-slate-700'}>Ishraq (After Sunrise)</span>
-            <span className="font-mono font-bold text-[#34d399]">{prayerTimes?.Ishraq || '06:15 AM'}</span>
-          </div>
-          <div className={`flex justify-between items-center p-2.5 rounded-xl ${isDarkMode ? 'bg-white/[0.02]' : 'bg-slate-50'}`}>
-            <span className={isDarkMode ? 'text-white/80' : 'text-slate-700'}>Chasht (Mid-Morning)</span>
-            <span className="font-mono font-bold text-[#34d399]">{prayerTimes?.Chasht || '08:00 AM'}</span>
-          </div>
-          <div className={`flex justify-between items-center p-2.5 rounded-xl ${activePrayer === 'Zawaal (Prohibited)' ? 'bg-rose-500/30 border-2 border-rose-500' : isDarkMode ? 'bg-rose-500/10 border border-rose-500/20' : 'bg-rose-50 border-rose-100'}`}>
-            <span className="text-rose-400 font-bold flex items-center gap-1"><AlertCircle size={12}/> Zawaal (No Prayer Time)</span>
-            <span className="font-mono font-bold text-rose-400">{prayerTimes?.Zawaal || '12:13 PM'}</span>
-          </div>
-        </div>
-      </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <div onClick={() => setActiveTab('quran')} className={`${isDarkMode ? 'bg-white/[0.04] border-white/10' : 'bg-white/70 border-slate-200/80 shadow-xl'} backdrop-blur-2xl p-4 rounded-[28px] border cursor-pointer active:scale-95 transition-transform`}>
-          <div className="w-10 h-10 rounded-2xl bg-[#34d399]/15 flex items-center justify-center text-[#34d399] mb-3 border border-[#34d399]/20">
-            <BookOpen size={20} />
+          <div>
+            <p className={`text-[10px] font-bold uppercase tracking-[0.16em] ${
+              isDarkMode ? 'text-emerald-300/60' : 'text-emerald-700/60'
+            }`}>
+              Daily Focus
+            </p>
+            <p className={`mt-1 text-sm font-semibold leading-6 ${
+              isDarkMode ? 'text-white/85' : 'text-slate-700'
+            }`}>
+              {activePrayer === 'Zawaal (Prohibited)'
+                ? 'Use this time for Dhikr, Istighfar and quiet reflection.'
+                : 'Keep your prayers on time, remember Allah, and make space for Quran today.'}
+            </p>
           </div>
-          <p className={`text-sm font-bold tracking-tight ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Al-Quran</p>
-          <p className={`text-[10px] mt-0.5 ${isDarkMode ? 'text-white/50' : 'text-slate-500'}`}>Read 114 Surahs</p>
         </div>
-        <div onClick={() => setCurrentTool('tasbih')} className={`${isDarkMode ? 'bg-white/[0.04] border-white/10' : 'bg-white/70 border-slate-200/80 shadow-xl'} backdrop-blur-2xl p-4 rounded-[28px] border cursor-pointer active:scale-95 transition-transform`}>
-          <div className="w-10 h-10 rounded-2xl bg-[#34d399]/15 flex items-center justify-center text-[#34d399] mb-3 border border-[#34d399]/20">
-            <RotateCcw size={20} />
+      </section>
+
+      {/* More tools */}
+      <section className="grid grid-cols-2 gap-3 pb-3">
+        <button
+          onClick={() => setCurrentTool('asma')}
+          className={`flex items-center gap-3 p-4 rounded-[22px] border text-left ${
+            isDarkMode
+              ? 'bg-white/[0.035] border-white/10'
+              : 'bg-white border-slate-200'
+          }`}
+        >
+          <div className="w-10 h-10 rounded-2xl bg-amber-400/10 text-amber-500 flex items-center justify-center">
+            <Sparkles size={19} />
           </div>
-          <p className={`text-sm font-bold tracking-tight ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Digital Tasbih</p>
-          <p className={`text-[10px] mt-0.5 ${isDarkMode ? 'text-white/50' : 'text-slate-500'}`}>Count daily Zikr</p>
-        </div>
-        <div onClick={() => setActiveTab('qibla')} className={`${isDarkMode ? 'bg-white/[0.04] border-white/10' : 'bg-white/70 border-slate-200/80 shadow-xl'} backdrop-blur-2xl p-4 rounded-[28px] border cursor-pointer active:scale-95 transition-transform`}>
-          <div className="w-10 h-10 rounded-2xl bg-[#34d399]/15 flex items-center justify-center text-[#34d399] mb-3 border border-[#34d399]/20">
-            <Compass size={20} />
+          <div>
+            <p className={`text-sm font-bold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>99 Names</p>
+            <p className={`text-[10px] ${isDarkMode ? 'text-white/40' : 'text-slate-500'}`}>Asma-ul-Husna</p>
           </div>
-          <p className={`text-sm font-bold tracking-tight ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Qibla Direction</p>
-          <p className={`text-[10px] mt-0.5 ${isDarkMode ? 'text-white/50' : 'text-slate-500'}`}>Kaaba compass</p>
-        </div>
-        <div onClick={() => setCurrentTool('asma')} className={`${isDarkMode ? 'bg-white/[0.04] border-white/10' : 'bg-white/70 border-slate-200/80 shadow-xl'} backdrop-blur-2xl p-4 rounded-[28px] border cursor-pointer active:scale-95 transition-transform`}>
-          <div className="w-10 h-10 rounded-2xl bg-[#34d399]/15 flex items-center justify-center text-[#34d399] mb-3 border border-[#34d399]/20">
-            <Heart size={20} />
+        </button>
+
+        <button
+          onClick={() => setActiveTab('more')}
+          className={`flex items-center gap-3 p-4 rounded-[22px] border text-left ${
+            isDarkMode
+              ? 'bg-white/[0.035] border-white/10'
+              : 'bg-white border-slate-200'
+          }`}
+        >
+          <div className="w-10 h-10 rounded-2xl bg-emerald-400/10 text-emerald-400 flex items-center justify-center">
+            <Menu size={19} />
           </div>
-          <p className={`text-sm font-bold tracking-tight ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>99 Names</p>
-          <p className={`text-[10px] mt-0.5 ${isDarkMode ? 'text-white/50' : 'text-slate-500'}`}>Asma-ul-Husna</p>
-        </div>
-      </div>
-    </div>
+          <div>
+            <p className={`text-sm font-bold ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>More</p>
+            <p className={`text-[10px] ${isDarkMode ? 'text-white/40' : 'text-slate-500'}`}>All features</p>
+          </div>
+        </button>
+      </section>
+
+    </main>
   );
 }
 
 function QuranScreen({ isDownloaded, downloading, downloadFullQuran, setSelectedSurah, searchQuery, setSearchQuery, isDarkMode }) {
-  const filteredSurahs = surahsList.filter(s => 
-    s.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    s.meaning.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    s.no.toString().includes(searchQuery)
+  const filteredSurahs = surahsList.filter((surah) =>
+    `${surah.number} ${surah.name} ${surah.englishName || ''}`
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase())
   );
 
   return (
-    <div className="space-y-3">
-      {!isDownloaded ? (
-        <div className="bg-gradient-to-r from-[#065f46] to-[#047857] p-4 rounded-[24px] flex justify-between items-center shadow-xl border border-white/10 text-white">
-          <div>
-            <p className="text-xs font-bold">Download Offline Quran</p>
-            <p className="text-[#a7f3d0] text-[10px]">Complete cache (~3MB)</p>
+    <main className="w-full max-w-5xl mx-auto px-4 sm:px-6 py-5 sm:py-7">
+
+      {/* Quran Hero */}
+      <section className="mw-gradient rounded-[28px] p-5 sm:p-7 relative overflow-hidden shadow-2xl">
+        <div className="absolute -right-16 -top-16 w-56 h-56 rounded-full bg-white/10 blur-2xl" />
+
+        <div className="relative">
+          <div className="flex items-center gap-2 text-white/60 text-xs font-bold uppercase tracking-[0.16em]">
+            <BookOpen size={14} />
+            Al-Quran
           </div>
-          <button onClick={downloadFullQuran} disabled={downloading} className="bg-white text-[#065f46] px-4 py-2 rounded-2xl text-xs font-bold shadow-lg">
-            {downloading ? 'Downloading...' : 'Download'}
-          </button>
-        </div>
-      ) : (
-        <div className={`${isDarkMode ? 'bg-white/[0.04] border-white/10' : 'bg-white/70 border-slate-200'} backdrop-blur-2xl p-3.5 rounded-[24px] flex items-center gap-2.5 border shadow-lg`}>
-          <CheckCircle size={16} className="text-[#34d399]" />
-          <p className="text-[#34d399] text-xs font-bold">Quran saved offline successfully!</p>
-        </div>
-      )}
 
-      <div className="relative">
-        <Search className={`absolute left-4 top-3.5 ${isDarkMode ? 'text-white/40' : 'text-slate-400'}`} size={16} />
-        <input 
-          type="text" 
-          placeholder="Search Surah..." 
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className={`w-full ${isDarkMode ? 'bg-white/[0.04] border-white/10 text-white placeholder-white/30' : 'bg-white/70 border-slate-200 text-slate-900 placeholder-slate-400'} backdrop-blur-2xl pl-11 pr-4 py-3 rounded-2xl text-xs border focus:outline-none focus:border-[#34d399] shadow-inner`}
-        />
-      </div>
+          <h1 className="mt-2 text-2xl sm:text-3xl font-bold tracking-tight">
+            Read the Quran
+          </h1>
 
-      <p className={`text-[11px] font-bold uppercase tracking-wider px-1 ${isDarkMode ? 'text-white/40' : 'text-slate-400'}`}>Surah List ({filteredSurahs.length})</p>
-      {filteredSurahs.map(surah => (
-        <div 
-          key={surah.no} 
-          onClick={() => setSelectedSurah(surah)}
-          className={`${isDarkMode ? 'bg-white/[0.04] border-white/10' : 'bg-white/70 border-slate-200 shadow-xl'} backdrop-blur-2xl p-4 rounded-[24px] border flex justify-between items-center cursor-pointer active:scale-[0.99] transition-transform`}
-        >
-          <div className="flex items-center gap-3.5">
-            <div className="w-10 h-10 rounded-2xl bg-[#34d399]/15 flex items-center justify-center text-[#34d399] text-xs font-bold border border-[#34d399]/20">{surah.no}</div>
-            <div>
-              <p className={`text-sm font-bold tracking-tight ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>{surah.name}</p>
-              <p className={`text-[11px] ${isDarkMode ? 'text-white/50' : 'text-slate-500'}`}>{surah.meaning} • {surah.versesCount} Verses</p>
+          <p className="mt-1 text-sm text-white/65">
+            Read, search and continue your Quran journey.
+          </p>
+
+          <div className="mt-5 flex items-center gap-3">
+            <div className="flex-1 rounded-2xl bg-black/15 border border-white/10 px-4 py-3">
+              <p className="text-[10px] uppercase tracking-widest text-white/45 font-bold">
+                Quran
+              </p>
+              <p className="mt-1 text-sm font-semibold text-white/90">
+                114 Surahs
+              </p>
+            </div>
+
+            <div className="rounded-2xl bg-white/10 border border-white/10 px-4 py-3 text-center">
+              <p className="text-[10px] uppercase tracking-widest text-white/45 font-bold">
+                Offline
+              </p>
+              <p className="mt-1 text-sm font-bold">
+                {isDownloaded ? 'Ready' : 'Available'}
+              </p>
             </div>
           </div>
-          <p className="text-[#34d399] text-lg font-bold">{surah.arabic}</p>
         </div>
-      ))}
-    </div>
+      </section>
+
+      {/* Offline Quran */}
+      <section className={`mt-4 rounded-[24px] border p-4 sm:p-5 ${
+        isDarkMode
+          ? 'bg-white/[0.035] border-white/10'
+          : 'bg-white border-slate-200'
+      }`}>
+        <div className="flex items-center gap-3">
+          <div className={`w-11 h-11 rounded-2xl flex items-center justify-center ${
+            isDownloaded
+              ? 'bg-emerald-500/10 text-emerald-400'
+              : 'bg-amber-400/10 text-amber-500'
+          }`}>
+            {isDownloaded ? <CheckCircle size={21} /> : <Download size={21} />}
+          </div>
+
+          <div className="flex-1 min-w-0">
+            <p className={`text-sm font-bold ${
+              isDarkMode ? 'text-white' : 'text-slate-900'
+            }`}>
+              {isDownloaded ? 'Quran available offline' : 'Save Quran for offline reading'}
+            </p>
+
+            <p className={`text-xs mt-0.5 ${
+              isDarkMode ? 'text-white/45' : 'text-slate-500'
+            }`}>
+              {isDownloaded
+                ? 'Your Quran data is stored on this device.'
+                : 'Download once and read without an internet connection.'}
+            </p>
+          </div>
+
+          {!isDownloaded && (
+            <button
+              onClick={downloadFullQuran}
+              disabled={downloading}
+              className="shrink-0 bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2.5 rounded-xl text-xs font-bold disabled:opacity-50"
+            >
+              {downloading ? 'Saving…' : 'Download'}
+            </button>
+          )}
+        </div>
+      </section>
+
+      {/* Search */}
+      <section className="mt-5">
+        <div className={`flex items-center gap-3 rounded-2xl border px-4 py-3 ${
+          isDarkMode
+            ? 'bg-white/[0.045] border-white/10'
+            : 'bg-white border-slate-200'
+        }`}>
+          <Search size={19} className={isDarkMode ? 'text-white/40' : 'text-slate-400'} />
+
+          <input
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search Surah by name or number…"
+            className={`flex-1 bg-transparent outline-none text-sm ${
+              isDarkMode
+                ? 'text-white placeholder:text-white/30'
+                : 'text-slate-900 placeholder:text-slate-400'
+            }`}
+          />
+
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className={`text-xs font-bold ${
+                isDarkMode ? 'text-emerald-300' : 'text-emerald-700'
+              }`}
+            >
+              Clear
+            </button>
+          )}
+        </div>
+      </section>
+
+      {/* Surah List */}
+      <section className="mt-5">
+        <div className="flex items-center justify-between mb-3 px-1">
+          <div>
+            <h2 className={`text-lg font-bold ${
+              isDarkMode ? 'text-white' : 'text-slate-900'
+            }`}>
+              Surahs
+            </h2>
+            <p className={`text-xs mt-0.5 ${
+              isDarkMode ? 'text-white/40' : 'text-slate-500'
+            }`}>
+              {filteredSurahs.length} results
+            </p>
+          </div>
+
+          <BookOpen
+            size={18}
+            className={isDarkMode ? 'text-emerald-300' : 'text-emerald-700'}
+          />
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {filteredSurahs.map((surah) => (
+            <button
+              key={surah.number}
+              onClick={() => setSelectedSurah(surah)}
+              className={`group flex items-center gap-3 p-4 rounded-[22px] border text-left ${
+                isDarkMode
+                  ? 'bg-white/[0.035] border-white/10 hover:bg-white/[0.06]'
+                  : 'bg-white border-slate-200 hover:border-emerald-200'
+              }`}
+            >
+              <div className={`w-11 h-11 shrink-0 rounded-2xl rotate-45 flex items-center justify-center ${
+                isDarkMode
+                  ? 'bg-emerald-400/10 text-emerald-300'
+                  : 'bg-emerald-50 text-emerald-700'
+              }`}>
+                <span className="-rotate-45 text-xs font-bold">
+                  {surah.number}
+                </span>
+              </div>
+
+              <div className="flex-1 min-w-0">
+                <p className={`text-sm font-bold truncate ${
+                  isDarkMode ? 'text-white' : 'text-slate-900'
+                }`}>
+                  {surah.englishName || surah.name}
+                </p>
+
+                <p className={`text-[11px] mt-0.5 ${
+                  isDarkMode ? 'text-white/40' : 'text-slate-500'
+                }`}>
+                  {surah.name}
+                  {surah.numberOfAyahs ? ` • ${surah.numberOfAyahs} Ayahs` : ''}
+                </p>
+              </div>
+
+              <div className={`text-xl font-serif ${
+                isDarkMode ? 'text-emerald-200/80' : 'text-emerald-800/80'
+              }`}>
+                {surah.name}
+              </div>
+            </button>
+          ))}
+        </div>
+
+        {filteredSurahs.length === 0 && (
+          <div className={`text-center py-12 rounded-[24px] border ${
+            isDarkMode
+              ? 'bg-white/[0.03] border-white/10'
+              : 'bg-white border-slate-200'
+          }`}>
+            <Search size={28} className="mx-auto opacity-40" />
+            <p className={`mt-3 text-sm font-semibold ${
+              isDarkMode ? 'text-white/70' : 'text-slate-600'
+            }`}>
+              No Surah found
+            </p>
+            <p className={`mt-1 text-xs ${
+              isDarkMode ? 'text-white/35' : 'text-slate-400'
+            }`}>
+              Try another name or number.
+            </p>
+          </div>
+        )}
+      </section>
+
+    </main>
   );
 }
 
@@ -671,26 +974,590 @@ function QiblaScreen({ city, isDarkMode }) {
   );
 }
 
-function MoreScreen({ setCurrentTool, isDarkMode }) {
+
+function IslamicCalendarView({ onBack }) {
+  const today = new Date();
+
+  const hijriFormatter = new Intl.DateTimeFormat('en-u-ca-islamic-umalqura', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  });
+
+  const weekdayFormatter = new Intl.DateTimeFormat('en', {
+    weekday: 'short'
+  });
+
+  const monthFormatter = new Intl.DateTimeFormat('en-u-ca-islamic-umalqura', {
+    month: 'long',
+    year: 'numeric'
+  });
+
+  const getHijriParts = (date) => {
+    const parts = new Intl.DateTimeFormat('en-u-ca-islamic-umalqura', {
+      day: 'numeric',
+      month: 'numeric',
+      year: 'numeric'
+    }).formatToParts(date);
+
+    return Object.fromEntries(
+      parts
+        .filter(p => ['day', 'month', 'year'].includes(p.type))
+        .map(p => [p.type, Number(p.value)])
+    );
+  };
+
+  const current = getHijriParts(today);
+
+  const [viewDate, setViewDate] = useState(today);
+
+  const shiftMonth = (amount) => {
+    const next = new Date(viewDate);
+    next.setDate(15);
+    next.setMonth(next.getMonth() + amount);
+    setViewDate(next);
+  };
+
+  const viewHijri = getHijriParts(viewDate);
+
+  const days = [];
+  const cursor = new Date(viewDate);
+  cursor.setDate(1);
+
+  // Find the first Gregorian date belonging to the displayed Hijri month.
+  for (let i = -3; i <= 35; i++) {
+    const d = new Date(viewDate);
+    d.setDate(1 + i);
+
+    const h = getHijriParts(d);
+
+    if (
+      h.year === viewHijri.year &&
+      h.month === viewHijri.month &&
+      !days.some(x => x.h.day === h.day)
+    ) {
+      days.push({ date: d, h });
+    }
+  }
+
+  // If month crosses a Gregorian month, search a wider range.
+  if (days.length < 29) {
+    days.length = 0;
+
+    for (let i = -20; i <= 50; i++) {
+      const d = new Date(viewDate);
+      d.setDate(1 + i);
+
+      const h = getHijriParts(d);
+
+      if (
+        h.year === viewHijri.year &&
+        h.month === viewHijri.month &&
+        !days.some(x => x.h.day === h.day)
+      ) {
+        days.push({ date: d, h });
+      }
+    }
+  }
+
+  days.sort((a, b) => a.h.day - b.h.day);
+
+  const firstDate = days[0]?.date;
+  const startOffset = firstDate ? firstDate.getDay() : 0;
+
+  const cells = [
+    ...Array.from({ length: startOffset }, () => null),
+    ...days
+  ];
+
+  const islamicEvents = [
+    { month: 1, day: 1, title: "1 Muharram", icon: "🌙" },
+    { month: 1, day: 10, title: "Ashura", icon: "🕌" },
+    { month: 3, day: 12, title: "12 Rabi al-Awwal", icon: "✨" },
+    { month: 7, day: 27, title: "Isra & Mi'raj", icon: "🌌" },
+    { month: 8, day: 15, title: "Shab-e-Barat", icon: "🌙" },
+    { month: 9, day: 1, title: "1 Ramadan", icon: "🌙" },
+    { month: 9, day: 27, title: "Laylat al-Qadr", icon: "⭐" },
+    { month: 10, day: 1, title: "Eid al-Fitr", icon: "🎉" },
+    { month: 12, day: 9, title: "Day of Arafah", icon: "🕋" },
+    { month: 12, day: 10, title: "Eid al-Adha", icon: "🕋" }
+  ];
+
+  const currentEvent = islamicEvents.find(
+    e => e.month === current.month && e.day === current.day
+  );
+
+  const monthName = monthFormatter.format(viewDate);
+
   return (
-    <div className="space-y-3">
-      <div onClick={() => setCurrentTool('tasbih')} className={`${isDarkMode ? 'bg-white/[0.04] border-white/10' : 'bg-white/70 border-slate-200 shadow-xl'} backdrop-blur-2xl p-4 rounded-[24px] border cursor-pointer flex items-center justify-between`}>
+    <div className="mw-calendar-page">
+      <div className="mw-calendar-header">
+        <button className="mw-icon-button" onClick={onBack} aria-label="Back">
+          <ArrowLeft size={20} />
+        </button>
+
         <div>
-          <p className={`text-sm font-bold tracking-tight ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Digital Tasbih Counter</p>
-          <p className={`text-[11px] mt-0.5 ${isDarkMode ? 'text-white/50' : 'text-slate-500'}`}>Count daily Zikr</p>
+          <div className="mw-eyebrow">ISLAMIC CALENDAR</div>
+          <h2>Hijri Calendar</h2>
+          <p>Track important Islamic dates</p>
         </div>
-        <RotateCcw className="text-[#34d399]" size={20} />
       </div>
-      <div onClick={() => setCurrentTool('asma')} className={`${isDarkMode ? 'bg-white/[0.04] border-white/10' : 'bg-white/70 border-slate-200 shadow-xl'} backdrop-blur-2xl p-4 rounded-[24px] border cursor-pointer flex items-center justify-between`}>
+
+      <div className="mw-calendar-hero mw-gradient">
+        <div className="mw-calendar-hero-icon">🌙</div>
         <div>
-          <p className={`text-sm font-bold tracking-tight ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Asma-ul-Husna (99 Names)</p>
-          <p className={`text-[11px] mt-0.5 ${isDarkMode ? 'text-white/50' : 'text-slate-500'}`}>Learn beautiful names</p>
+          <span>Today</span>
+          <strong>{hijriFormatter.format(today)}</strong>
+          <small>
+            {today.toLocaleDateString('en-IN', {
+              day: 'numeric',
+              month: 'long',
+              year: 'numeric'
+            })}
+          </small>
         </div>
-        <Heart className="text-[#34d399]" size={20} />
+      </div>
+
+      {currentEvent && (
+        <div className="mw-calendar-event mw-card">
+          <span>{currentEvent.icon}</span>
+          <div>
+            <small>Today's Islamic occasion</small>
+            <strong>{currentEvent.title}</strong>
+          </div>
+        </div>
+      )}
+
+      <div className="mw-calendar-card mw-card">
+        <div className="mw-calendar-monthbar">
+          <button className="mw-calendar-nav" onClick={() => shiftMonth(-1)}>
+            ‹
+          </button>
+
+          <div>
+            <strong>{monthName}</strong>
+            <small>Hijri month</small>
+          </div>
+
+          <button className="mw-calendar-nav" onClick={() => shiftMonth(1)}>
+            ›
+          </button>
+        </div>
+
+        <div className="mw-calendar-weekdays">
+          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+            <span key={day}>{day}</span>
+          ))}
+        </div>
+
+        <div className="mw-calendar-grid">
+          {cells.map((item, index) => {
+            if (!item) {
+              return <div key={`empty-${index}`} className="mw-calendar-day empty" />;
+            }
+
+            const isToday =
+              item.h.year === current.year &&
+              item.h.month === current.month &&
+              item.h.day === current.day;
+
+            const event = islamicEvents.find(
+              e => e.month === item.h.month && e.day === item.h.day
+            );
+
+            return (
+              <div
+                key={`${item.h.year}-${item.h.month}-${item.h.day}`}
+                className={`mw-calendar-day ${isToday ? 'today' : ''} ${event ? 'event' : ''}`}
+                title={event?.title || ''}
+              >
+                <strong>{item.h.day}</strong>
+                <small>{item.date.getDate()}</small>
+                {event && <i>•</i>}
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="mw-calendar-legend">
+          <span><i className="today-dot"></i> Today</span>
+          <span><i className="event-dot"></i> Islamic occasion</span>
+        </div>
+      </div>
+
+      <div className="mw-calendar-info mw-card">
+        <div className="mw-section-title">
+          <div>
+            <h3>Important dates</h3>
+            <p>Commonly observed Islamic occasions</p>
+          </div>
+          <Calendar size={20} />
+        </div>
+
+        <div className="mw-event-list">
+          {islamicEvents
+            .filter(e => e.month === viewHijri.month)
+            .map(event => (
+              <div className="mw-event-row" key={`${event.month}-${event.day}`}>
+                <span>{event.icon}</span>
+                <div>
+                  <strong>{event.day} {monthName.split(' ')[0]}</strong>
+                  <small>{event.title}</small>
+                </div>
+              </div>
+            ))}
+
+          {!islamicEvents.some(e => e.month === viewHijri.month) && (
+            <div className="mw-muted">
+              No major listed occasion in this month.
+            </div>
+          )}
+        </div>
+      </div>
+
+      <p className="mw-calendar-note">
+        Hijri dates are calculated using the Umm al-Qura calendar system.
+        Local moon-sighting dates may differ by one day.
+      </p>
+    </div>
+  );
+}
+
+
+function RamadanCalendarView({ onBack, prayerTimes, hijriDate }) {
+  const today = new Date();
+
+  const hijriParts = (date) => {
+    const parts = new Intl.DateTimeFormat('en-u-ca-islamic-umalqura', {
+      day: 'numeric',
+      month: 'numeric',
+      year: 'numeric'
+    }).formatToParts(date);
+
+    return Object.fromEntries(
+      parts
+        .filter(p => ['day', 'month', 'year'].includes(p.type))
+        .map(p => [p.type, Number(p.value)])
+    );
+  };
+
+  const currentHijri = hijriParts(today);
+  const isRamadan = currentHijri.month === 9;
+
+  const ramadanYear = currentHijri.year;
+
+  const ramadanDays = Array.from({ length: 30 }, (_, index) => ({
+    day: index + 1,
+    label: `Day ${index + 1}`,
+    focus: [
+      'Intention & sincerity',
+      'Quran & reflection',
+      'Charity & kindness',
+      'Patience & gratitude',
+      'Dhikr & remembrance',
+      'Family & good character',
+      'Forgiveness',
+      'Quran recitation',
+      'Dua & hope',
+      'Sadaqah',
+      'Prayer & consistency',
+      'Helping others',
+      'Gratitude',
+      'Seeking knowledge',
+      'Good deeds',
+      'Self-reflection',
+      'Dua for the Ummah',
+      'Quran reflection',
+      'Patience',
+      'Charity',
+      'Night prayer',
+      'Dhikr',
+      'Family ties',
+      'Forgiveness',
+      'Quran completion goal',
+      'Extra worship',
+      'Seek Laylat al-Qadr',
+      'Dua & repentance',
+      'Prepare for Eid',
+      'Gratitude & Eid preparation'
+    ][index]
+  }));
+
+  const selectedDay = isRamadan
+    ? Math.min(Math.max(currentHijri.day, 1), 30)
+    : 1;
+
+  const [activeDay, setActiveDay] = useState(selectedDay);
+
+  const sehri = prayerTimes?.Fajr || '—';
+  const iftar = prayerTimes?.Maghrib || '—';
+
+  const qadrNights = [21, 23, 25, 27, 29];
+
+  return (
+    <div className="mw-ramadan-page">
+
+      <div className="mw-calendar-header">
+        <button className="mw-icon-button" onClick={onBack} aria-label="Back">
+          <ArrowLeft size={20} />
+        </button>
+
+        <div>
+          <div className="mw-eyebrow">RAMADAN</div>
+          <h2>30-Day Journey</h2>
+          <p>Plan your worship throughout Ramadan</p>
+        </div>
+      </div>
+
+      <div className="mw-ramadan-hero mw-gradient">
+        <div className="mw-ramadan-moon">🌙</div>
+
+        <div className="mw-ramadan-hero-copy">
+          <span>Ramadan {ramadanYear}</span>
+
+          <strong>
+            {isRamadan
+              ? `Ramadan ${currentHijri.day}`
+              : 'Ramadan planner'}
+          </strong>
+
+          <small>
+            {isRamadan
+              ? 'Today in Ramadan'
+              : '30 days of worship, reflection & growth'}
+          </small>
+        </div>
+      </div>
+
+      <div className="mw-ramadan-times mw-card">
+        <div className="mw-ramadan-time">
+          <span>🌅</span>
+          <div>
+            <small>Sehri ends</small>
+            <strong>{sehri}</strong>
+          </div>
+        </div>
+
+        <div className="mw-ramadan-divider"></div>
+
+        <div className="mw-ramadan-time">
+          <span>🌇</span>
+          <div>
+            <small>Iftar</small>
+            <strong>{iftar}</strong>
+          </div>
+        </div>
+      </div>
+
+      {!isRamadan && (
+        <div className="mw-ramadan-notice mw-card">
+          <Calendar size={19} />
+          <div>
+            <strong>Ramadan mode</strong>
+            <p>
+              The planner is available year-round. During Ramadan,
+              today's day will be highlighted automatically.
+            </p>
+          </div>
+        </div>
+      )}
+
+      <div className="mw-ramadan-progress mw-card">
+        <div className="mw-section-title">
+          <div>
+            <h3>30-Day Journey</h3>
+            <p>{activeDay} of 30 days selected</p>
+          </div>
+
+          <strong className="mw-ramadan-progress-number">
+            {Math.round((activeDay / 30) * 100)}%
+          </strong>
+        </div>
+
+        <div className="mw-progress-track">
+          <div
+            className="mw-progress-fill"
+            style={{ width: `${(activeDay / 30) * 100}%` }}
+          />
+        </div>
+      </div>
+
+      <div className="mw-ramadan-days mw-card">
+        <div className="mw-section-title">
+          <div>
+            <h3>Ramadan calendar</h3>
+            <p>Select a day to view its focus</p>
+          </div>
+          <Calendar size={20} />
+        </div>
+
+        <div className="mw-ramadan-grid">
+          {ramadanDays.map(item => {
+            const isActive = item.day === activeDay;
+            const isToday = isRamadan && item.day === currentHijri.day;
+            const isQadr = qadrNights.includes(item.day);
+
+            return (
+              <button
+                key={item.day}
+                className={`mw-ramadan-day
+                  ${isActive ? 'active' : ''}
+                  ${isToday ? 'today' : ''}
+                  ${isQadr ? 'qadr' : ''}
+                `}
+                onClick={() => setActiveDay(item.day)}
+              >
+                <strong>{item.day}</strong>
+                <span>{isQadr ? '⭐' : isToday ? 'Today' : 'Ramadan'}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="mw-ramadan-focus mw-card">
+        <div className="mw-focus-icon">🤲</div>
+
+        <div>
+          <small>Day {activeDay} focus</small>
+          <h3>{ramadanDays[activeDay - 1].focus}</h3>
+
+          {qadrNights.includes(activeDay) && (
+            <div className="mw-qadr-badge">
+              ⭐ One of the odd nights — seek Laylat al-Qadr
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="mw-ramadan-checklist mw-card">
+        <div className="mw-section-title">
+          <div>
+            <h3>Daily worship</h3>
+            <p>A simple Ramadan checklist</p>
+          </div>
+          <CheckCircle2 size={20} />
+        </div>
+
+        <div className="mw-ramadan-check-items">
+          {[
+            'Five daily prayers',
+            'Quran recitation',
+            'Dhikr',
+            'Dua',
+            'Sadaqah / good deed'
+          ].map(item => (
+            <label key={item} className="mw-check-row">
+              <input type="checkbox" />
+              <span>{item}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      <p className="mw-ramadan-note">
+        Prayer times depend on your selected location and calculation method.
+        Islamic dates may vary by local moon sighting.
+      </p>
+
+    </div>
+  );
+}
+
+function MoreScreen({ setCurrentTool, setActiveTab, prayerTimes, hijriDate }) {
+  if (window.__mwIslamicCalendarOpen) {
+    window.__mwIslamicCalendarOpen = false;
+    return (
+      <IslamicCalendarView
+        onBack={() => setCurrentTool(null)}
+      />
+    );
+  }
+
+  if (window.__mwRamadanOpen) {
+    window.__mwRamadanOpen = false;
+    return (
+      <RamadanCalendarView
+        onBack={() => setCurrentTool(null)}
+        prayerTimes={prayerTimes}
+        hijriDate={hijriDate}
+      />
+    );
+  }
+
+  const tools = [
+    {
+      id: 'islamicCalendar',
+      title: 'Islamic Calendar',
+      description: 'Hijri dates & occasions',
+      icon: <Calendar size={24} />,
+      action: () => {
+        window.__mwIslamicCalendarOpen = true;
+        setCurrentTool('islamicCalendar');
+      }
+    },
+    {
+      id: 'ramadan',
+      title: 'Ramadan',
+      description: '30-day worship journey',
+      icon: <Moon size={24} />,
+      action: () => {
+        window.__mwRamadanOpen = true;
+        setCurrentTool('ramadan');
+      }
+    },
+    {
+      id: 'asma',
+      title: '99 Names',
+      description: 'Asma ul Husna',
+      icon: <Sparkles size={24} />,
+      action: () => setCurrentTool('asma')
+    },
+    {
+      id: 'tasbih',
+      title: 'Tasbih',
+      description: 'Digital dhikr counter',
+      icon: <RotateCcw size={24} />,
+      action: () => setCurrentTool('tasbih')
+    }
+  ];
+
+  return (
+    <div className="mw-more-page">
+      <div className="mw-section-title">
+        <div>
+          <div className="mw-eyebrow">MUSLIM WORLD</div>
+          <h2>More Tools</h2>
+          <p>Useful Islamic tools in one place</p>
+        </div>
+        <Menu size={24} />
+      </div>
+
+      <div className="mw-tool-grid">
+        {tools.map(tool => (
+          <button
+            key={tool.id}
+            className="mw-tool-card mw-card"
+            onClick={tool.action}
+          >
+            <div className="mw-tool-icon">{tool.icon}</div>
+            <strong>{tool.title}</strong>
+            <span>{tool.description}</span>
+          </button>
+        ))}
+      </div>
+
+      <div className="mw-card mw-more-note">
+        <Sparkles size={20} />
+        <div>
+          <strong>Coming next</strong>
+          <p>Verified Hadith, notifications, offline support and more.</p>
+        </div>
       </div>
     </div>
   );
 }
+
 
 function TasbihView({ isDarkMode }) {
   const [count, setCount] = useState(0);
