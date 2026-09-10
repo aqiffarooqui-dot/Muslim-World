@@ -58,7 +58,220 @@ export default function App() {
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
-    const prayerSourceUI = (
+    return () => clearInterval(timer);
+  }, []);
+
+
+  useEffect(() => {
+    localStorage.setItem('mw_theme', isDarkMode ? 'dark' : 'light');
+    document.documentElement.dataset.mwTheme = isDarkMode ? 'dark' : 'light';
+  }, [isDarkMode]);
+
+  useEffect(() => {
+    const cachedQuran = localStorage.getItem('full_quran_cache');
+    if (cachedQuran) setIsDownloaded(true);
+
+    const currentVersion = "1.0.0";
+    fetch('/version.json')
+      .then(res => res.json())
+      .then(data => {
+        if (data.version && data.version !== currentVersion) {
+          setUpdateAvailable(true);
+        }
+      }).catch(() => {});
+  }, []);
+
+  const format12Hour = (timeStr) => {
+    if (!timeStr) return '--:--';
+    const cleanTime = timeStr.split(' ')[0];
+    const [hourStr, minuteStr] = cleanTime.split(':');
+    let hour = parseInt(hourStr, 10);
+    if (isNaN(hour)) return timeStr;
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    hour = hour % 12;
+    hour = hour ? hour : 12;
+    return `${hour}:${minuteStr} ${ampm}`;
+  };
+
+  const adjustTime = (timeStr, minutesToAdd) => {
+    if (!timeStr) return '--:--';
+    const cleanTime = timeStr.split(' ')[0];
+    const [h, m] = cleanTime.split(':').map(Number);
+    if (isNaN(h) || isNaN(m)) return timeStr;
+    const date = new Date();
+    date.setHours(h, m + minutesToAdd);
+    let hh = date.getHours();
+    const mm = String(date.getMinutes()).padStart(2, '0');
+    const ampm = hh >= 12 ? 'PM' : 'AM';
+    hh = hh % 12;
+    hh = hh ? hh : 12;
+    return `${hh}:${mm} ${ampm}`;
+  };
+
+  useEffect(() => {
+    async function fetchPrayerTimes() {
+      setLoadingPrayers(true);
+      try {
+        const timingsRes = await fetch(`https://api.aladhan.com/v1/timingsByCity?city=${encodeURIComponent(city)}&country=${encodeURIComponent(country)}&method=${calculationMethod}&school=${madhab}`);
+        const timingsData = await timingsRes.json();
+        
+        if (timingsData.code === 200) {
+          const raw = timingsData.data.timings;
+          
+          const formatted = {
+            Fajr: format12Hour(raw.Fajr),
+            Sunrise: format12Hour(raw.Sunrise),
+            Dhuhr: format12Hour(raw.Dhuhr),
+            Asr: format12Hour(raw.Asr),
+            Maghrib: format12Hour(raw.Maghrib),
+            Sunset: format12Hour(raw.Sunset),
+            Isha: format12Hour(raw.Isha),
+            SehriEnd: format12Hour(raw.Fajr),
+            Ishraq: adjustTime(raw.Sunrise, 20),
+            Chasht: adjustTime(raw.Sunrise, 120),
+            Zawaal: adjustTime(raw.Dhuhr, -15),
+            Tahajjud: "03:15 AM"
+          };
+          
+          setPrayerTimes(formatted);
+          const h = timingsData.data.date.hijri;
+          setHijriDate(`${h.day} ${h.month.en} ${h.year} AH`);
+        }
+      } catch (e) {
+        setPrayerTimes({
+          Fajr: "04:32 AM", Sunrise: "05:55 AM", Dhuhr: "12:28 PM", Asr: "04:54 PM", Maghrib: "07:12 PM", Sunset: "07:12 PM", Isha: "08:35 PM",
+          SehriEnd: "04:32 AM", Ishraq: "06:15 AM", Chasht: "08:00 AM", Zawaal: "12:13 PM", Tahajjud: "03:15 AM"
+        });
+        setHijriDate("27 Safar 1448 AH");
+      } finally {
+        setLoadingPrayers(false);
+      }
+    }
+    fetchPrayerTimes();
+  }, [city, country, calculationMethod, madhab, prayerMode]);
+
+  const handleDetectGPS = () => {
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported by your browser");
+      return;
+    }
+
+    setLocatingGPS(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        try {
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+          const data = await res.json();
+          const detectedCity = data.address.city || data.address.town || data.address.state_district || 'New Delhi';
+          const detectedCountry = data.address.country || 'India';
+          
+          setCity(detectedCity);
+          setCountry(detectedCountry);
+          localStorage.setItem('user_city', detectedCity);
+          localStorage.setItem('user_country', detectedCountry);
+          setShowLocationModal(false);
+        } catch (err) {
+          alert("Could not fetch address from coordinates.");
+        } finally {
+          setLocatingGPS(false);
+        }
+      },
+      () => {
+        setLocatingGPS(false);
+        alert("Unable to retrieve your location.");
+      },
+      { timeout: 10000 }
+    );
+  };
+
+  const handleSaveLocation = (newCity, newCountry) => {
+    setCity(newCity);
+    setCountry(newCountry);
+    localStorage.setItem('user_city', newCity);
+    localStorage.setItem('user_country', newCountry);
+    setShowLocationModal(false);
+  };
+
+  const saveMasjid = (masjid) => {
+    const updated = [...masjids.filter(m => m.id !== masjid.id), masjid];
+    setMasjids(updated);
+    localStorage.setItem('mw_masjids', JSON.stringify(updated));
+    setSelectedMasjid(masjid.id);
+    localStorage.setItem('mw_selected_masjid', masjid.id);
+  };
+
+  const activeMasjid = masjids.find(m => m.id === selectedMasjid);
+
+  useEffect(() => {
+    if (!prayerTimes || prayerMode !== 'location') return;
+
+    const updateCountdown = () => {
+      const now = new Date();
+      const entries = ['Fajr','Dhuhr','Asr','Maghrib','Isha']
+        .map(name => ({ name, value: prayerTimes[name], minutes: parseTimeToMinutes(prayerTimes[name]) }))
+        .filter(x => x.value && x.minutes >= 0);
+
+      let next = entries.find(x => x.minutes > now.getHours() * 60 + now.getMinutes());
+      if (!next && entries.length) next = { ...entries[0], tomorrow: true };
+
+      if (!next) {
+        setNextPrayer(null);
+        setPrayerCountdown('');
+        return;
+      }
+
+      let diff = next.minutes - (now.getHours() * 60 + now.getMinutes());
+      diff = diff * 60 - now.getSeconds();
+      if (next.tomorrow) diff += 24 * 60 * 60;
+
+      const h = Math.floor(diff / 3600);
+      const m = Math.floor((diff % 3600) / 60);
+      const sec = diff % 60;
+
+      setNextPrayer(next.name);
+      setPrayerCountdown(`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`);
+    };
+
+    updateCountdown();
+    const timer = setInterval(updateCountdown, 1000);
+    return () => clearInterval(timer);
+  }, [prayerTimes, prayerMode, currentTime]);
+
+  const downloadFullQuran = async () => {
+    setDownloading(true);
+    try {
+      const res = await fetch('https://api.alquran.cloud/v1/quran/en.asad');
+      const data = await res.json();
+      if (data.code === 200) {
+        localStorage.setItem('full_quran_cache', JSON.stringify(data.data.surahs));
+        setIsDownloaded(true);
+      }
+    } catch (e) {
+      alert("Download failed.");
+    } finally {
+      setDownloading(false);
+    }
+  };
+
+  const handleRefreshApp = () => {
+    window.location.reload();
+  };
+
+  const parseTimeToMinutes = (timeStr) => {
+    if (!timeStr) return 0;
+    const parts = timeStr.split(' ');
+    if (parts.length < 2) return 0;
+    const [time, modifier] = parts;
+    let [hours, minutes] = time.split(':').map(Number);
+    if (modifier === 'PM' && hours < 12) hours += 12;
+    if (modifier === 'AM' && hours === 12) hours = 0;
+    return hours * 60 + minutes;
+  };
+
+  const currentMinutes = currentTime.getHours() * 60 + currentTime.getMinutes();
+
+const prayerSourceUI = (
     <section className="mw-prayer-premium-card mw-glass">
       <div className="mw-prayer-card-head">
         <div>
@@ -468,217 +681,7 @@ export default function App() {
     return { current, next };
   })();
 
-  return () => clearInterval(timer);
-  }, []);
 
-  useEffect(() => {
-    localStorage.setItem('mw_theme', isDarkMode ? 'dark' : 'light');
-    document.documentElement.dataset.mwTheme = isDarkMode ? 'dark' : 'light';
-  }, [isDarkMode]);
-
-  useEffect(() => {
-    const cachedQuran = localStorage.getItem('full_quran_cache');
-    if (cachedQuran) setIsDownloaded(true);
-
-    const currentVersion = "1.0.0";
-    fetch('/version.json')
-      .then(res => res.json())
-      .then(data => {
-        if (data.version && data.version !== currentVersion) {
-          setUpdateAvailable(true);
-        }
-      }).catch(() => {});
-  }, []);
-
-  const format12Hour = (timeStr) => {
-    if (!timeStr) return '--:--';
-    const cleanTime = timeStr.split(' ')[0];
-    const [hourStr, minuteStr] = cleanTime.split(':');
-    let hour = parseInt(hourStr, 10);
-    if (isNaN(hour)) return timeStr;
-    const ampm = hour >= 12 ? 'PM' : 'AM';
-    hour = hour % 12;
-    hour = hour ? hour : 12;
-    return `${hour}:${minuteStr} ${ampm}`;
-  };
-
-  const adjustTime = (timeStr, minutesToAdd) => {
-    if (!timeStr) return '--:--';
-    const cleanTime = timeStr.split(' ')[0];
-    const [h, m] = cleanTime.split(':').map(Number);
-    if (isNaN(h) || isNaN(m)) return timeStr;
-    const date = new Date();
-    date.setHours(h, m + minutesToAdd);
-    let hh = date.getHours();
-    const mm = String(date.getMinutes()).padStart(2, '0');
-    const ampm = hh >= 12 ? 'PM' : 'AM';
-    hh = hh % 12;
-    hh = hh ? hh : 12;
-    return `${hh}:${mm} ${ampm}`;
-  };
-
-  useEffect(() => {
-    async function fetchPrayerTimes() {
-      setLoadingPrayers(true);
-      try {
-        const timingsRes = await fetch(`https://api.aladhan.com/v1/timingsByCity?city=${encodeURIComponent(city)}&country=${encodeURIComponent(country)}&method=${calculationMethod}&school=${madhab}`);
-        const timingsData = await timingsRes.json();
-        
-        if (timingsData.code === 200) {
-          const raw = timingsData.data.timings;
-          
-          const formatted = {
-            Fajr: format12Hour(raw.Fajr),
-            Sunrise: format12Hour(raw.Sunrise),
-            Dhuhr: format12Hour(raw.Dhuhr),
-            Asr: format12Hour(raw.Asr),
-            Maghrib: format12Hour(raw.Maghrib),
-            Sunset: format12Hour(raw.Sunset),
-            Isha: format12Hour(raw.Isha),
-            SehriEnd: format12Hour(raw.Fajr),
-            Ishraq: adjustTime(raw.Sunrise, 20),
-            Chasht: adjustTime(raw.Sunrise, 120),
-            Zawaal: adjustTime(raw.Dhuhr, -15),
-            Tahajjud: "03:15 AM"
-          };
-          
-          setPrayerTimes(formatted);
-          const h = timingsData.data.date.hijri;
-          setHijriDate(`${h.day} ${h.month.en} ${h.year} AH`);
-        }
-      } catch (e) {
-        setPrayerTimes({
-          Fajr: "04:32 AM", Sunrise: "05:55 AM", Dhuhr: "12:28 PM", Asr: "04:54 PM", Maghrib: "07:12 PM", Sunset: "07:12 PM", Isha: "08:35 PM",
-          SehriEnd: "04:32 AM", Ishraq: "06:15 AM", Chasht: "08:00 AM", Zawaal: "12:13 PM", Tahajjud: "03:15 AM"
-        });
-        setHijriDate("27 Safar 1448 AH");
-      } finally {
-        setLoadingPrayers(false);
-      }
-    }
-    fetchPrayerTimes();
-  }, [city, country, calculationMethod, madhab, prayerMode]);
-
-  const handleDetectGPS = () => {
-    if (!navigator.geolocation) {
-      alert("Geolocation is not supported by your browser");
-      return;
-    }
-
-    setLocatingGPS(true);
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const { latitude, longitude } = position.coords;
-        try {
-          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
-          const data = await res.json();
-          const detectedCity = data.address.city || data.address.town || data.address.state_district || 'New Delhi';
-          const detectedCountry = data.address.country || 'India';
-          
-          setCity(detectedCity);
-          setCountry(detectedCountry);
-          localStorage.setItem('user_city', detectedCity);
-          localStorage.setItem('user_country', detectedCountry);
-          setShowLocationModal(false);
-        } catch (err) {
-          alert("Could not fetch address from coordinates.");
-        } finally {
-          setLocatingGPS(false);
-        }
-      },
-      () => {
-        setLocatingGPS(false);
-        alert("Unable to retrieve your location.");
-      },
-      { timeout: 10000 }
-    );
-  };
-
-  const handleSaveLocation = (newCity, newCountry) => {
-    setCity(newCity);
-    setCountry(newCountry);
-    localStorage.setItem('user_city', newCity);
-    localStorage.setItem('user_country', newCountry);
-    setShowLocationModal(false);
-  };
-
-  const saveMasjid = (masjid) => {
-    const updated = [...masjids.filter(m => m.id !== masjid.id), masjid];
-    setMasjids(updated);
-    localStorage.setItem('mw_masjids', JSON.stringify(updated));
-    setSelectedMasjid(masjid.id);
-    localStorage.setItem('mw_selected_masjid', masjid.id);
-  };
-
-  const activeMasjid = masjids.find(m => m.id === selectedMasjid);
-
-  useEffect(() => {
-    if (!prayerTimes || prayerMode !== 'location') return;
-
-    const updateCountdown = () => {
-      const now = new Date();
-      const entries = ['Fajr','Dhuhr','Asr','Maghrib','Isha']
-        .map(name => ({ name, value: prayerTimes[name], minutes: parseTimeToMinutes(prayerTimes[name]) }))
-        .filter(x => x.value && x.minutes >= 0);
-
-      let next = entries.find(x => x.minutes > now.getHours() * 60 + now.getMinutes());
-      if (!next && entries.length) next = { ...entries[0], tomorrow: true };
-
-      if (!next) {
-        setNextPrayer(null);
-        setPrayerCountdown('');
-        return;
-      }
-
-      let diff = next.minutes - (now.getHours() * 60 + now.getMinutes());
-      diff = diff * 60 - now.getSeconds();
-      if (next.tomorrow) diff += 24 * 60 * 60;
-
-      const h = Math.floor(diff / 3600);
-      const m = Math.floor((diff % 3600) / 60);
-      const sec = diff % 60;
-
-      setNextPrayer(next.name);
-      setPrayerCountdown(`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`);
-    };
-
-    updateCountdown();
-    const timer = setInterval(updateCountdown, 1000);
-    return () => clearInterval(timer);
-  }, [prayerTimes, prayerMode, currentTime]);
-
-  const downloadFullQuran = async () => {
-    setDownloading(true);
-    try {
-      const res = await fetch('https://api.alquran.cloud/v1/quran/en.asad');
-      const data = await res.json();
-      if (data.code === 200) {
-        localStorage.setItem('full_quran_cache', JSON.stringify(data.data.surahs));
-        setIsDownloaded(true);
-      }
-    } catch (e) {
-      alert("Download failed.");
-    } finally {
-      setDownloading(false);
-    }
-  };
-
-  const handleRefreshApp = () => {
-    window.location.reload();
-  };
-
-  const parseTimeToMinutes = (timeStr) => {
-    if (!timeStr) return 0;
-    const parts = timeStr.split(' ');
-    if (parts.length < 2) return 0;
-    const [time, modifier] = parts;
-    let [hours, minutes] = time.split(':').map(Number);
-    if (modifier === 'PM' && hours < 12) hours += 12;
-    if (modifier === 'AM' && hours === 12) hours = 0;
-    return hours * 60 + minutes;
-  };
-
-  const currentMinutes = currentTime.getHours() * 60 + currentTime.getMinutes();
 
   let activePrayer = 'Dhuhr Time';
   let dosText = "Engage in Dhikr, Quran, and lawful daily work.";
