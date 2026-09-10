@@ -5,12 +5,10 @@ const QiblaCompass = () => {
   const [qiblaDirection, setQiblaDirection] = useState(0);
   const [error, setError] = useState('');
 
-  // Kaaba Coordinates
   const KAABA_LAT = 21.4225;
   const KAABA_LNG = 39.8262;
 
   useEffect(() => {
-    // 1. Get User Location
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -26,7 +24,6 @@ const QiblaCompass = () => {
       setError('Geolocation is not supported by your browser.');
     }
 
-    // 2. Listen to Device Orientation (Compass)
     const handleOrientation = (e) => {
       let compass = e.webkitCompassHeading || Math.abs(e.alpha - 360);
       if (compass !== undefined) {
@@ -35,7 +32,6 @@ const QiblaCompass = () => {
     };
 
     if (window.DeviceOrientationEvent) {
-      // For iOS 13+ devices requesting permission
       if (typeof DeviceOrientationEvent.requestPermission === 'function') {
         DeviceOrientationEvent.requestPermission()
           .then((response) => {
@@ -54,7 +50,6 @@ const QiblaCompass = () => {
     };
   }, []);
 
-  // Formula to calculate angle between User and Kaaba
   const calculateQibla = (lat, lng) => {
     const phiK = (KAABA_LAT * Math.PI) / 180;
     const lambdaK = (KAABA_LNG * Math.PI) / 180;
@@ -70,7 +65,6 @@ const QiblaCompass = () => {
     setQiblaDirection(qibla);
   };
 
-  // Rotation logic for the compass needle/pointer
   const rotationAngle = qiblaDirection - heading;
 
   return (
@@ -79,7 +73,6 @@ const QiblaCompass = () => {
       {error && <p style={{ color: '#ff6b6b' }}>{error}</p>}
       
       <div style={{ position: 'relative', width: '250px', height: '250px', margin: '40px auto', borderRadius: '50%', border: '4px solid #4cc9f0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        {/* Compass Dial / Needle */}
         <div style={{
           position: 'absolute',
           width: '100%',
