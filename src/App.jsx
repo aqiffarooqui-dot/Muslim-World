@@ -665,14 +665,8 @@ function DuaScreen({ isDarkMode }) {
 
 function QiblaScreen({ city, isDarkMode }) {
   return (
-    <div className="flex flex-col items-center justify-center py-6 w-full">
-      <QiblaCompass />
-      <div className={`w-32 h-32 rounded-full ${isDarkMode ? 'bg-white/[0.04] border-white/10' : 'bg-white/70 border-slate-200 shadow-2xl'} backdrop-blur-2xl border flex items-center justify-center relative`}>
-        <div className="absolute inset-0 rounded-full border border-[#34d399]/30 animate-ping opacity-25"></div>
-        <Compass size={64} className="text-[#34d399]" />
-      </div>
-      <p className={`text-base font-bold mt-6 tracking-tight ${isDarkMode ? 'text-white' : 'text-slate-900'}`}>Qibla Direction Compass</p>
-      <p className={`text-xs mt-1 font-medium ${isDarkMode ? 'text-white/50' : 'text-slate-500'}`}>Calculated precisely from {city}</p>
+    <div className="w-full">
+      <QiblaCompass city={city} isDarkMode={isDarkMode} />
     </div>
   );
 }
